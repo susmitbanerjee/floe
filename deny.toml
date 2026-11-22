@@ -1,0 +1,63 @@
+# cargo-deny policy for the supply chain. Run with `cargo deny check`.
+# Field names checked against cargo-deny 0.21.0.
+
+[advisories]
+# Vulnerability advisories always fail the check. cargo-deny has no setting to relax that.
+# Unmaintained advisories fail for every crate in the graph. cargo-deny 0.21 can't downgrade them
+# to warnings; see docs/adr/0002-unmaintained-advisories-fail-the-check.md. To accept one, add an
+# `ignore` entry with a reason and an absolute expiry date.
+unmaintained = "all"
+# Each entry is an unmaintained crate deep in the DataFusion, Arrow or pgwire tree that Floe can't
+# replace on its own, and none has a patched version. The expiry lines up with the quarterly
+# upgrade in docs/adr/0001-datafusion-version.md: re-check each one then.
+ignore = [
+    { id = "RUSTSEC-2025-0134", expiry = "2027-02-17", reason = "rustls-pemfile: datafusion-postgres 0.18 reads PEM files with it; the fix is upstream moving to rustls-pki-types PemObject" },
+    { id = "RUSTSEC-2024-0436", expiry = "2027-02-17", reason = "paste: macro-only dependency of parquet 58, no runtime code" },
+    { id = "RUSTSEC-2026-0543", expiry = "2027-02-17", reason = "chrono: used throughout arrow, parquet, datafusion and pgwire; no replacement until they migrate" },
+    { id = "RUSTSEC-2026-0555", expiry = "2027-02-17", reason = "chrono-tz: datafusion-functions uses it for time zone support" },
+    { id = "RUSTSEC-2026-0542", expiry = "2027-02-17", reason = "humantime: object_store 0.13 uses it through parquet; unmaintained because chrono is" },
+]
+
+[licenses]
+allow = [
+    "Apache-2.0",
+    "MIT",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+    "Zlib",
+    "CC0-1.0",
+]
+# Any other licence needs a per-crate entry here with a comment saying why.
+exceptions = [
+    # Build-time only: psm's build script writes a static archive with it (DataFusion's
+    # recursive_protection -> stacker -> psm). The LLVM exception only widens Apache-2.0.
+    { crate = "ar_archive_writer", allow = ["Apache-2.0 WITH LLVM-exception"] },
+    # pgwire (through datafusion-postgres) parses X.509 certificates with it. MPL-2.0 is file-level
+    # copyleft: Floe ships it unmodified and its source stays public on crates.io.
+    { crate = "x509-certificate", allow = ["MPL-2.0"] },
+    # Rust port of libbzip2 behind DataFusion's default "compression" feature (async-compression ->
+    # bzip2), which iceberg-datafusion and datafusion-postgres turn on. Permissive BSD-style terms
+    # (keep the notice, mark modified copies, no endorsement) but not on the OSI list, so it is
+    # allowed for this crate only. Maintainer approved 2026-11-19; see ADR 0001.
+    { crate = "libbz2-rs-sys", allow = ["bzip2-1.0.6"] },
+    # Mozilla's root certificates compiled into the catalog client (reqwest rustls-tls), so Floe
+    # reads no certificate files at runtime. CDLA-Permissive-2.0 is a permissive data licence,
+    # not on the OSI list, so it is allowed for this crate only. Maintainer approved 2026-11-19;
+    # see ADR 0004.
+    { crate = "webpki-roots", allow = ["CDLA-Permissive-2.0"] },
+]
+# The allow list is policy, not an inventory of today's graph, so unused entries are fine.
+unused-allowed-license = "allow"
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+# A git dependency needs an ADR saying why, and must pin a commit SHA, before it is listed here.
+allow-git = []

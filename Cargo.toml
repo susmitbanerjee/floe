@@ -1,0 +1,98 @@
+[workspace]
+members = ["crates/*"]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0-dev"
+edition = "2024"
+license = "Apache-2.0"
+# Keep in step with the channel in rust-toolchain.toml.
+rust-version = "1.100"
+
+[workspace.dependencies]
+# Floe's own crates. The version keeps them from counting as wildcard dependencies.
+floe = { path = "crates/floe", version = "0.1.0-dev" }
+floe-catalog = { path = "crates/floe-catalog", version = "0.1.0-dev" }
+floe-pg = { path = "crates/floe-pg", version = "0.1.0-dev" }
+floe-scan = { path = "crates/floe-scan", version = "0.1.0-dev" }
+floe-testkit = { path = "crates/floe-testkit", version = "0.1.0-dev" }
+
+anyhow = { version = "1", default-features = false }
+# SQL logic test runner for the end-to-end suites (crates/floe-suites).
+sqllogictest = { version = "0.29", default-features = false }
+# Runs the floe binary in CLI tests (exit codes and output), as Prompt 9 asks.
+assert_cmd = { version = "2", default-features = false }
+async-trait = { version = "0.1", default-features = false }
+# AWS SigV4 for Glue and S3 Tables (docs/adr/0005-sigv4.md). aws-config's default TLS is aws-lc;
+# Floe hands it an aws-smithy-http-client on rustls with ring instead.
+aws-config = { version = "1", default-features = false }
+aws-credential-types = { version = "1", default-features = false }
+aws-sigv4 = { version = "1", default-features = false }
+aws-smithy-http-client = { version = "1", default-features = false }
+aws-smithy-runtime-api = { version = "1", default-features = false }
+bytes = { version = "1", default-features = false }
+clap = { version = "4", default-features = false }
+# DataFusion 54 is the newest major all three families support; move them together, once a
+# quarter, in one PR. See docs/adr/0001-datafusion-version.md before changing any of these.
+datafusion = { version = "54", default-features = false }
+datafusion-postgres = { version = "0.18", default-features = false }
+futures = { version = "0.3", default-features = false }
+iceberg = { version = "0.11", default-features = false }
+iceberg-catalog-rest = { version = "0.11", default-features = false }
+iceberg-datafusion = { version = "0.11", default-features = false }
+# Only the Arrow major DataFusion 54 and iceberg 0.11 share (ADR 0001); the testkit writes with it.
+parquet = { version = "58", default-features = false }
+percent-encoding = { version = "2", default-features = false }
+# Must stay on the reqwest major that iceberg-catalog-rest uses: Floe hands it a reqwest::Client.
+reqwest = { version = "0.12", default-features = false }
+secrecy = { version = "0.10", default-features = false }
+serde = { version = "1", default-features = false }
+tempfile = { version = "3", default-features = false }
+thiserror = { version = "2", default-features = false }
+tokio = { version = "1", default-features = false }
+# TPC-H data, generated in-process for the end-to-end suites; no dependencies of its own.
+tpchgen = { version = "4", default-features = false }
+# Test client for floe-pg's server tests: the Postgres driver most Rust services use.
+tokio-postgres = { version = "0.7", default-features = false }
+# CancellationToken for shutdown; tokio's own utility crate, already in the tree via DataFusion.
+tokio-util = { version = "0.7", default-features = false }
+toml = { version = "1", default-features = false }
+tracing = { version = "0.1", default-features = false }
+tracing-subscriber = { version = "0.3", default-features = false }
+# iceberg's StorageFactory is a typetag trait, so implementing it needs the same typetag.
+typetag = { version = "0.2", default-features = false }
+url = { version = "2", default-features = false }
+wiremock = { version = "0.6", default-features = false }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+unreachable_pub = "warn"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "warn"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+dbg_macro = "deny"
+print_stdout = "deny"
+print_stderr = "deny"
+large_futures = "warn"
+needless_pass_by_value = "warn"
+redundant_clone = "warn"
+
+[profile.dev]
+# Line tables only, for Floe's crates too: every test binary links DataFusion, and full
+# debuginfo put target/ past the free space on a laptop. Backtraces still show lines.
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+# Dependencies likewise: DataFusion and the AWS SDK otherwise grow target/ past 10 GB.
+debug = "line-tables-only"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+# Unwind, never abort: a panic in one connection task must not take the whole server down.
+panic = "unwind"

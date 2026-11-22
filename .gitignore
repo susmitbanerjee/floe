@@ -1,0 +1,8 @@
+# Build output
+/target/
+
+# Editors and OS
+/.idea/
+/.vscode/
+.DS_Store
+*.swp

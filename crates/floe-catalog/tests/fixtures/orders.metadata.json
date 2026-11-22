@@ -1,0 +1,30 @@
+{
+  "format-version": 2,
+  "table-uuid": "9c12d441-03fe-4693-9a96-a0705ddf69c1",
+  "location": "s3://warehouse/sales/orders",
+  "last-sequence-number": 0,
+  "last-updated-ms": 1763510400000,
+  "last-column-id": 3,
+  "current-schema-id": 0,
+  "schemas": [
+    {
+      "type": "struct",
+      "schema-id": 0,
+      "fields": [
+        { "id": 1, "name": "order_id", "required": true, "type": "long" },
+        { "id": 2, "name": "customer", "required": false, "type": "string" },
+        { "id": 3, "name": "amount", "required": false, "type": "decimal(10, 2)" }
+      ]
+    }
+  ],
+  "default-spec-id": 0,
+  "partition-specs": [{ "spec-id": 0, "fields": [] }],
+  "last-partition-id": 999,
+  "default-sort-order-id": 0,
+  "sort-orders": [{ "order-id": 0, "fields": [] }],
+  "properties": {},
+  "snapshots": [],
+  "snapshot-log": [],
+  "metadata-log": [],
+  "refs": {}
+}

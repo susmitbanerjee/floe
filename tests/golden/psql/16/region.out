@@ -1,0 +1,6 @@
+region,count(*),sum(sales.orders.amount)
+ap-south-1,22410,111320760.03
+eu-west-1,22519,112230141.09
+us-east-1,22568,113013057.49
+us-west-2,22503,112645243.32
+(4 rows)

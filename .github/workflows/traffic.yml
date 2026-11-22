@@ -1,0 +1,31 @@
+name: Traffic
+
+# GitHub keeps traffic data for 14 days only. This snapshot must run every day from the first
+# day the repository is public, or that history is lost for good.
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: scripts/traffic.sh
+        env:
+          # Fine-grained token with "Administration: read" on this repository, for the traffic API.
+          GH_TOKEN: ${{ secrets.TRAFFIC_TOKEN }}
+          # This job's own token, used only to push the snapshot to the traffic branch.
+          PUSH_TOKEN: ${{ github.token }}

@@ -1,0 +1,5 @@
+[toolchain]
+# Keep in step with workspace.package.rust-version in Cargo.toml.
+channel = "1.100.0"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

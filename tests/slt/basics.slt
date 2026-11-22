@@ -1,0 +1,155 @@
+# Projections, filters, joins, grouping, ordering, limits and NULLs over the shop dataset.
+# Every expected result is worked out from the rows listed in crates/floe-suites/src/shop.rs.
+
+# Projection, all customers in key order.
+query IT
+SELECT customer_id, name FROM customers ORDER BY customer_id
+----
+1 Asha
+2 Ben
+3 Chen
+4 Dana
+
+# An expression in the projection: order 10's amount is 120.50, doubled.
+query IR
+SELECT order_id, amount * 2 FROM orders WHERE order_id = 10
+----
+10 241.00
+
+# A comparison filter. Order 12's NULL amount is neither > 50 nor not.
+query I
+SELECT order_id FROM orders WHERE amount > 50 ORDER BY order_id
+----
+10
+11
+14
+
+# IN, BETWEEN on dates, LIKE and IS NULL.
+query I
+SELECT order_id FROM orders WHERE status IN ('refunded', 'cancelled') ORDER BY order_id
+----
+12
+14
+
+query I
+SELECT order_id FROM orders WHERE ordered_on BETWEEN DATE '2026-01-03' AND DATE '2026-01-04' ORDER BY order_id
+----
+11
+12
+13
+
+query T
+SELECT name FROM customers WHERE name LIKE '%a%' ORDER BY name
+----
+Asha
+Dana
+
+query T
+SELECT name FROM customers WHERE country IS NULL
+----
+Chen
+
+# Inner join: order 15's customer 9 doesn't exist, so it drops out.
+query TI
+SELECT c.name, o.order_id FROM customers c JOIN orders o ON o.customer_id = c.customer_id ORDER BY o.order_id
+----
+Asha 10
+Asha 11
+Ben 12
+Chen 13
+Chen 14
+
+# Left join: Dana has no orders and still appears, with a count of 0.
+query TI
+SELECT c.name, count(o.order_id) FROM customers c LEFT JOIN orders o ON o.customer_id = c.customer_id GROUP BY c.name ORDER BY c.name
+----
+Asha 2
+Ben 1
+Chen 2
+Dana 0
+
+# Anti join: the one order whose customer doesn't exist.
+query I
+SELECT o.order_id FROM orders o WHERE NOT EXISTS (SELECT 1 FROM customers c WHERE c.customer_id = o.customer_id)
+----
+15
+
+# Grouping with HAVING: customer 1 spent 120.50 + 80.00, customer 3 spent 35.25 + 64.75.
+# Customer 2's only amount is NULL, so its sum is NULL and fails the HAVING; customer 9 spent 10.00.
+query IR
+SELECT customer_id, sum(amount) FROM orders GROUP BY customer_id HAVING sum(amount) > 50 ORDER BY customer_id
+----
+1 200.50
+3 100.00
+
+query TI
+SELECT status, count(*) FROM orders GROUP BY status ORDER BY status
+----
+cancelled 1
+paid 4
+refunded 1
+
+# Ordering: descending with NULLs last, then ascending with NULLs first.
+query IR
+SELECT order_id, amount FROM orders ORDER BY amount DESC NULLS LAST, order_id
+----
+10 120.50
+11 80.00
+14 64.75
+13 35.25
+15 10.00
+12 NULL
+
+query IR
+SELECT order_id, amount FROM orders ORDER BY amount ASC NULLS FIRST, order_id
+----
+12 NULL
+15 10.00
+13 35.25
+14 64.75
+11 80.00
+10 120.50
+
+# Two keys, the second descending.
+query TI
+SELECT status, order_id FROM orders ORDER BY status, order_id DESC
+----
+cancelled 12
+paid 15
+paid 13
+paid 11
+paid 10
+refunded 14
+
+# LIMIT and OFFSET: the fourth and fifth orders by id.
+query I
+SELECT order_id FROM orders ORDER BY order_id LIMIT 2 OFFSET 3
+----
+13
+14
+
+# NULLs: count(*) counts every row, count(amount) skips the NULL, sum ignores it.
+# 120.50 + 80.00 + 35.25 + 64.75 + 10.00 = 310.50.
+query IIR
+SELECT count(*), count(amount), sum(amount) FROM orders
+----
+6 5 310.50
+
+query T
+SELECT coalesce(country, 'unknown') FROM customers ORDER BY customer_id
+----
+IN
+GB
+unknown
+US
+
+# NULL = NULL is NULL, not true, so the filter keeps nothing.
+query I
+SELECT count(*) FROM orders WHERE amount = NULL
+----
+0
+
+query T
+SELECT NULL = NULL
+----
+NULL

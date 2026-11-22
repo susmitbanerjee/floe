@@ -1,0 +1,84 @@
+name: Lab
+
+# The gated suites against floe-lab (docs/floe-lab.md): nightly and on demand. Until the
+# repository variable FLOE_LAB_REPO names floe-lab (owner/name), the run is skipped with a
+# notice, not failed.
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lab
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - id: check
+        env:
+          FLOE_LAB_REPO: ${{ vars.FLOE_LAB_REPO }}
+        run: |
+          if [ -z "$FLOE_LAB_REPO" ]; then
+            echo "::notice title=Lab skipped::floe-lab doesn't exist yet. Set the repository variable FLOE_LAB_REPO to owner/name to run these tests."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  lab:
+    needs: check
+    if: needs.check.outputs.enabled == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ vars.FLOE_LAB_REPO }}
+          path: floe-lab
+          persist-credentials: false
+      - name: Start floe-lab
+        working-directory: floe-lab
+        run: docker compose up --wait
+      - run: rustup toolchain install
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - uses: taiki-e/install-action@75a7c0f87bd666af3cdb75c5b9e9d03ab6044e6f # v2.90.6
+        with:
+          tool: cargo-nextest@0.9.152
+          fallback: none
+      - run: cargo build --locked -p floe
+      - name: Start floe serve
+        run: |
+          set -a; . floe-lab/floe.env; set +a
+          target/debug/floe serve --config floe-lab/floe.toml > floe.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            grep -q '^ready' floe.log && break
+            sleep 1
+          done
+          address=$(sed -n 's#^ready  postgres://\([^/]*\)/lake$#\1#p' floe.log)
+          test -n "$address" || { cat floe.log; exit 1; }
+          echo "FLOE_LAB_ADDR=$address" >> "$GITHUB_ENV"
+      - name: Lab tests
+        env:
+          FLOE_LAB: "1"
+          FLOE_LAB_DIR: ${{ github.workspace }}/floe-lab
+        run: |
+          set -a; . floe-lab/floe.env; set +a
+          cargo nextest run --locked -p floe-suites --test lab --run-ignored ignored-only
+      - name: Floe log
+        if: always()
+        run: cat floe.log || true
+      - name: Stop floe-lab
+        if: always()
+        working-directory: floe-lab
+        run: docker compose down --volumes

@@ -1,0 +1,9 @@
+Table "sales.orders"
+Column,Type,Collation,Nullable,Default
+order_id,bigint,,not null,
+tenant_id,text,,not null,
+customer_id,text,,,
+region,text,,,
+status,text,,,
+amount,numeric,,,
+created_at,text,,not null,

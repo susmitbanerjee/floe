@@ -1,0 +1,76 @@
+# Round-trips for every type Floe promises, through the wire as Postgres text. The rows are
+# shop.types in crates/floe-suites/src/shop.rs; row 4 is all NULLs.
+
+# bigint: the extremes and zero.
+query II
+SELECT id, big FROM types ORDER BY id
+----
+1 9223372036854775807
+2 -9223372036854775808
+3 0
+4 NULL
+
+# text: plain, empty, and non-ASCII.
+query IT
+SELECT id, label FROM types ORDER BY id
+----
+1 plain
+2 (empty)
+3 naïve ☃
+4 NULL
+
+query II
+SELECT id, length(label) FROM types ORDER BY id
+----
+1 5
+2 0
+3 7
+4 NULL
+
+# numeric(14,2): the largest value, a negative cent, and zero keep their two places.
+query IR
+SELECT id, price FROM types ORDER BY id
+----
+1 999999999999.99
+2 -0.01
+3 0.00
+4 NULL
+
+# date: a recent day, the epoch, and a leap day.
+query IT
+SELECT id, day FROM types ORDER BY id
+----
+1 2026-01-01
+2 1970-01-01
+3 2024-02-29
+4 NULL
+
+# timestamptz, in UTC: midnight, microseconds kept, and a mid-day value. Floe always prints
+# six fractional digits, where Postgres drops them when they are zero; clients parse both.
+query IT
+SELECT id, at FROM types ORDER BY id
+----
+1 2026-01-01 00:00:00.000000+00
+2 1999-12-31 23:59:59.123456+00
+3 2026-06-15 12:30:00.000000+00
+4 NULL
+
+# boolean: true, false, and NULL.
+query IT
+SELECT id, flag FROM types ORDER BY id
+----
+1 t
+2 f
+3 NULL
+4 NULL
+
+# The values survive comparisons, not only printing.
+query I
+SELECT id FROM types WHERE big = 9223372036854775807 AND price = 999999999999.99 AND day = DATE '2026-01-01' AND flag
+----
+1
+
+query I
+SELECT id FROM types WHERE at = TIMESTAMPTZ '1999-12-31 23:59:59.123456+00:00'
+----
+2

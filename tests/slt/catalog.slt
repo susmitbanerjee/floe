@@ -1,0 +1,77 @@
+# What a client sees of the catalog: SHOW TABLES, information_schema, and how names resolve.
+# The lake has namespaces shop (sorted first, so the default schema) and shop_archive.
+
+statement ok
+SHOW TABLES
+
+query TT
+SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema LIKE 'shop%' ORDER BY table_schema, table_name
+----
+shop customers
+shop orders
+shop types
+shop_archive orders
+
+query TT
+SELECT column_name, is_nullable FROM information_schema.columns WHERE table_schema = 'shop' AND table_name = 'orders' ORDER BY ordinal_position
+----
+order_id NO
+customer_id NO
+amount YES
+status NO
+ordered_on NO
+
+# Unqualified names resolve in the default schema, shop.
+query I
+SELECT count(*) FROM orders
+----
+6
+
+# Qualified by schema, and by catalog and schema.
+query I
+SELECT count(*) FROM shop.orders
+----
+6
+
+query I
+SELECT count(*) FROM shop_archive.orders
+----
+1
+
+query I
+SELECT count(*) FROM lake.shop_archive.orders
+----
+1
+
+# A different search_path changes what an unqualified name means.
+statement ok
+SET search_path = shop_archive
+
+query I
+SELECT count(*) FROM orders
+----
+1
+
+statement ok
+SET search_path = shop
+
+query I
+SELECT count(*) FROM orders
+----
+6
+
+# A missing schema in a table name is a missing relation (42P01), as in Postgres; a
+# search_path naming no existing schema is 3F000, and leaves the path as it was.
+statement error SQLSTATE 42P01: relation "lake\.nope\.orders" does not exist
+SELECT count(*) FROM nope.orders
+
+statement error SQLSTATE 3F000: schema "nope" does not exist
+SET search_path = nope
+
+query I
+SELECT count(*) FROM orders
+----
+6
+
+statement error SQLSTATE 42P01: relation "lake\.shop\.missing" does not exist
+SELECT * FROM shop.missing
