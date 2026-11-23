@@ -40,7 +40,10 @@ next   psql -h 127.0.0.1 -U floe lake
 Global flags: `--log-format text|json` (default `text`) and
 `--log-level error|warn|info|debug|trace` (default `info`; `RUST_LOG` wins). Logs go to
 stderr. Floe reads S3 and catalog credentials from the standard AWS chain (environment,
-`AWS_PROFILE`, SSO, instance or pod role), never from the config file.
+`AWS_PROFILE`, SSO, instance or pod role), never from the config file. When `[catalog.sigv4]`
+names a `profile`, Floe reads the catalog and S3 with it. `catalog.uri` and `storage.endpoint`
+must use https, except plain http to this machine (`127.0.0.1`, `[::1]` or `localhost`) for a
+local lab ([ADR 0012](docs/adr/0012-plain-http-loopback-only.md)).
 
 A failure says what went wrong and how to fix it, on stderr, and exits with:
 
@@ -52,6 +55,16 @@ A failure says what went wrong and how to fix it, on stderr, and exits with:
 | 70 | internal error (a bug in Floe) |
 | 71 | cannot bind the Postgres listener |
 | 78 | config invalid |
+
+## Limits
+
+- **Tables are fixed at first use.** `floe serve` lists the catalog's tables once, at startup,
+  and loads each table's metadata the first time a query reads it. It keeps both until it
+  restarts, so tables created later, and snapshots committed later, show up only after a
+  restart. If the lake expires old snapshots and deletes their files, a long-running Floe can
+  fail to read a table until it restarts. The snapshot watcher arrives in v0.1.
+- **No authentication.** Floe listens on loopback only, and anyone who can connect there can
+  query every table Floe can read. Password login arrives in v0.1.
 
 ## Testing
 

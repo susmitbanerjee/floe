@@ -32,6 +32,7 @@ async fn a_table_outside_the_prefixes_fails_before_any_read() -> Result<(), Box<
         path_style: false,
         allowed_prefixes: vec![Url::parse("s3://elsewhere/")?],
         allow_local_files: true,
+        aws_profile: None,
     };
     let spy = Spy::default();
     let provider = FloeTableProvider::with_inner_storage(

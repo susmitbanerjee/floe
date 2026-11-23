@@ -6,7 +6,7 @@ use std::time::Duration;
 use floe_catalog::{CatalogSettings, CatalogTimeouts, SigV4Service, SigV4Settings};
 use floe_pg::ServerSettings;
 use floe_scan::StorageSettings;
-use url::Url;
+use url::{Host, Url};
 
 use super::file::{CatalogTable, Config, ServerTable, SigV4Table, StorageTable};
 use super::{ConfigError, ValidConfig};
@@ -24,7 +24,13 @@ pub(super) fn validate(
     lookup: &dyn Fn(&str) -> Option<String>,
 ) -> Result<ValidConfig, ConfigError> {
     let server = server_settings(&config.server)?;
-    let storage = storage_settings(&config.storage)?;
+    // One AWS identity reads both the catalog and its data files.
+    let aws_profile = config
+        .catalog
+        .sigv4
+        .as_ref()
+        .and_then(|sigv4| sigv4.profile.clone());
+    let storage = storage_settings(&config.storage, aws_profile)?;
     let catalog = catalog_settings(config.catalog, lookup)?;
     Ok(ValidConfig {
         server,
@@ -153,8 +159,12 @@ fn sigv4_settings(table: &SigV4Table) -> Result<SigV4Settings, ConfigError> {
     })
 }
 
-/// Rule 6 for `[storage]`, plus the region and endpoint checks.
-fn storage_settings(table: &StorageTable) -> Result<StorageSettings, ConfigError> {
+/// Rule 6 for `[storage]`, plus the region and endpoint checks. S3 reads use `aws_profile`,
+/// the catalog's SigV4 profile.
+fn storage_settings(
+    table: &StorageTable,
+    aws_profile: Option<String>,
+) -> Result<StorageSettings, ConfigError> {
     let region = aws_region("storage.region", &table.region)?;
     let endpoint = table
         .endpoint
@@ -181,21 +191,47 @@ fn storage_settings(table: &StorageTable) -> Result<StorageSettings, ConfigError
         path_style: table.path_style,
         allowed_prefixes,
         allow_local_files: table.allow_local_files,
+        aws_profile,
     })
 }
 
-/// An absolute http or https URL. The URL itself is never repeated: it may carry a password.
+/// Rule 3: an absolute https URL, or plain http to this machine only (docs/adr/0012), so
+/// signed requests and table data never cross a network in plain text. The URL itself is never
+/// repeated: it may carry a password.
 fn http_url(key: &'static str, text: &str) -> Result<Url, ConfigError> {
-    match Url::parse(text) {
-        Ok(url) if matches!(url.scheme(), "http" | "https") && url.has_host() => Ok(url),
-        _ => Err(ConfigError::InvalidUrl {
+    let url = match Url::parse(text) {
+        Ok(url) if matches!(url.scheme(), "http" | "https") && url.has_host() => url,
+        _ => {
+            return Err(ConfigError::InvalidUrl {
+                key,
+                reason: "is not an http or https URL".to_owned(),
+                fix: format!(
+                    "write {key} as an http or https URL with a host, such as \
+                     http://127.0.0.1:8181/catalog"
+                ),
+            });
+        }
+    };
+    if url.scheme() == "http" && !is_loopback(&url) {
+        return Err(ConfigError::InvalidUrl {
             key,
-            reason: "is not an http or https URL".to_owned(),
+            reason: "uses plain http to a host that isn't this machine".to_owned(),
             fix: format!(
-                "write {key} as an http or https URL with a host, such as \
-                 http://127.0.0.1:8181/catalog"
+                "change {key} to https://, or to http://127.0.0.1 when the service runs on this \
+                 machine"
             ),
-        }),
+        });
+    }
+    Ok(url)
+}
+
+/// Whether `url` names this machine: a loopback address, or `localhost`.
+fn is_loopback(url: &Url) -> bool {
+    match url.host() {
+        Some(Host::Ipv4(address)) => address.is_loopback(),
+        Some(Host::Ipv6(address)) => address.is_loopback(),
+        Some(Host::Domain(name)) => name == "localhost",
+        None => false,
     }
 }
 

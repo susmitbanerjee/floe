@@ -14,4 +14,8 @@ pub struct StorageSettings {
     pub allowed_prefixes: Vec<Url>,
     /// Whether `file://` prefixes are allowed. Only for local tests.
     pub allow_local_files: bool,
+    /// The AWS profile S3 reads take credentials from: the binary sets it from
+    /// `[catalog.sigv4] profile`, so the catalog and its data are read as one identity. `None`
+    /// follows `AWS_PROFILE` and the rest of the default chain.
+    pub aws_profile: Option<String>,
 }

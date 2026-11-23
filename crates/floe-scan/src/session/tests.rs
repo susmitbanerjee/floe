@@ -24,6 +24,7 @@ async fn file_reading_and_writing_statements_all_fail() -> Result<(), Box<dyn Er
         path_style: false,
         allowed_prefixes: vec![Url::parse(&fixture.warehouse_prefix())?],
         allow_local_files: true,
+        aws_profile: None,
     };
     let lake = Arc::new(LakeCatalog::from_catalog(Arc::clone(&fixture.catalog)));
     let catalog = Arc::new(LakeCatalogProvider::new(lake, storage));

@@ -37,6 +37,7 @@ async fn lake(
         path_style: false,
         allowed_prefixes: vec![Url::parse(&fixture.warehouse_prefix())?],
         allow_local_files: true,
+        aws_profile: None,
     };
     let catalog = Arc::new(LakeCatalog::from_catalog(Arc::clone(&fixture.catalog)));
     let provider = Arc::new(LakeCatalogProvider::new(catalog, storage));

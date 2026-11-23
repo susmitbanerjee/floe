@@ -31,7 +31,9 @@
   carry context (table, URI), never secrets.
 - anyhow only in the floe binary's main and CLI glue, always with .context("what Floe was doing").
 - No unwrap, expect, panic!, todo!, unimplemented! outside tests. A truly impossible case uses
-  expect("INVARIANT: <why>") and needs reviewer sign-off.
+  .expect("INVARIANT: <why>") under #[expect(clippy::expect_used, reason = "INVARIANT: <why>")]
+  on the enclosing statement or function, and needs reviewer sign-off. Without the attribute the
+  gate fails; if the expect later goes away, the leftover attribute fails the gate too.
 - Messages a person sees say what happened, why, and what to do next.
   Postgres clients get the matching SQLSTATE.
 
@@ -39,7 +41,9 @@
 - #![forbid(unsafe_code)] everywhere (workspace lint).
 - Secrets are secrecy::SecretString. Never in logs, errors, Debug output or panics.
   Config refers to them as "env:NAME"; examples never hold real values.
-- Every outbound call uses TLS (rustls) and has a connect timeout and a total timeout.
+- Every outbound call uses TLS (rustls) and has a connect timeout and a total timeout. The one
+  exception is plain http to this machine (a loopback address or localhost), for local labs
+  such as MinIO and Lakekeeper (docs/adr/0012-plain-http-loopback-only.md).
   Retry only idempotent reads, with backoff and a cap.
 - Treat clients and catalogs as untrusted:
   - SQL passes an allow-list: SELECT, EXPLAIN, SHOW, and SET for approved session settings only.

@@ -77,6 +77,7 @@ mod tests {
             path_style: false,
             allowed_prefixes,
             allow_local_files,
+            aws_profile: None,
         }))
     }
 
