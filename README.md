@@ -40,7 +40,8 @@ next   psql -h 127.0.0.1 -U floe lake
 Global flags: `--log-format text|json` (default `text`) and
 `--log-level error|warn|info|debug|trace` (default `info`; `RUST_LOG` wins). Logs go to
 stderr. Floe reads S3 and catalog credentials from the standard AWS chain (environment,
-`AWS_PROFILE`, SSO, instance or pod role), never from the config file.
+`AWS_PROFILE`, SSO, instance or pod role), never from the config file. When `[catalog.sigv4]`
+names a `profile`, Floe reads the catalog and S3 with it.
 
 A failure says what went wrong and how to fix it, on stderr, and exits with:
 

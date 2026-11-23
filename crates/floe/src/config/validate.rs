@@ -24,7 +24,13 @@ pub(super) fn validate(
     lookup: &dyn Fn(&str) -> Option<String>,
 ) -> Result<ValidConfig, ConfigError> {
     let server = server_settings(&config.server)?;
-    let storage = storage_settings(&config.storage)?;
+    // One AWS identity reads both the catalog and its data files.
+    let aws_profile = config
+        .catalog
+        .sigv4
+        .as_ref()
+        .and_then(|sigv4| sigv4.profile.clone());
+    let storage = storage_settings(&config.storage, aws_profile)?;
     let catalog = catalog_settings(config.catalog, lookup)?;
     Ok(ValidConfig {
         server,
@@ -153,8 +159,12 @@ fn sigv4_settings(table: &SigV4Table) -> Result<SigV4Settings, ConfigError> {
     })
 }
 
-/// Rule 6 for `[storage]`, plus the region and endpoint checks.
-fn storage_settings(table: &StorageTable) -> Result<StorageSettings, ConfigError> {
+/// Rule 6 for `[storage]`, plus the region and endpoint checks. S3 reads use `aws_profile`,
+/// the catalog's SigV4 profile.
+fn storage_settings(
+    table: &StorageTable,
+    aws_profile: Option<String>,
+) -> Result<StorageSettings, ConfigError> {
     let region = aws_region("storage.region", &table.region)?;
     let endpoint = table
         .endpoint
@@ -181,6 +191,7 @@ fn storage_settings(table: &StorageTable) -> Result<StorageSettings, ConfigError
         path_style: table.path_style,
         allowed_prefixes,
         allow_local_files: table.allow_local_files,
+        aws_profile,
     })
 }
 

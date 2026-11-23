@@ -1,7 +1,7 @@
 //! One table per rule: each case is valid, or names the error variant and a phrase its message
 //! must contain.
 
-use super::{Expect, check};
+use super::{Doc, Expect, check};
 use crate::config::ConfigError;
 
 #[test]
@@ -240,6 +240,23 @@ fn rule_4_sigv4_names_a_known_service_and_a_region() {
             ),
         ],
     );
+}
+
+#[test]
+fn s3_reads_take_credentials_from_the_sigv4_profile() -> Result<(), ConfigError> {
+    let mut doc = Doc {
+        uri: r#""https://glue.ap-south-1.amazonaws.com/iceberg""#,
+        sigv4: Some((r#""ap-south-1""#, r#""glue""#)),
+        sigv4_extra: "profile = \"analytics\"",
+        ..Doc::default()
+    };
+    let signed = doc.load()?;
+    assert_eq!(signed.storage.aws_profile.as_deref(), Some("analytics"));
+
+    doc.sigv4_extra = "";
+    let default_chain = doc.load()?;
+    assert_eq!(default_chain.storage.aws_profile, None);
+    Ok(())
 }
 
 #[test]

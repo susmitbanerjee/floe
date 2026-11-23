@@ -20,7 +20,25 @@ fn settings(endpoint: Option<&str>, path_style: bool) -> S3Settings {
         endpoint: endpoint.map(str::to_owned),
         region: "us-east-1".to_owned(),
         path_style,
+        profile: None,
     }
+}
+
+#[test]
+fn reads_with_the_aws_profile_from_the_storage_settings() -> Result<(), url::ParseError> {
+    let storage = StorageSettings {
+        endpoint: None,
+        region: "ap-south-1".to_owned(),
+        path_style: false,
+        allowed_prefixes: vec![Url::parse("s3://lake/")?],
+        allow_local_files: false,
+        aws_profile: Some("analytics".to_owned()),
+    };
+    assert_eq!(
+        S3Settings::from(&storage).profile.as_deref(),
+        Some("analytics")
+    );
+    Ok(())
 }
 
 fn storage(server: &MockServer) -> S3Storage {

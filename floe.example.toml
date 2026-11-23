@@ -32,7 +32,8 @@ warehouse = "demo"
 # AWS service to sign for: "glue" for AWS Glue (also S3 Tables through Glue), or "s3tables" for
 # the S3 Tables endpoint itself.
 # service = "glue"
-# AWS profile to take credentials from. Omit it to follow AWS_PROFILE and the default chain.
+# AWS profile to take credentials from, for the catalog and for S3 reads alike. Omit it to
+# follow AWS_PROFILE and the default chain.
 # profile = "analytics"
 
 [storage]

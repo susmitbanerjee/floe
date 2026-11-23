@@ -61,6 +61,8 @@ pub(crate) struct S3Settings {
     endpoint: Option<String>,
     region: String,
     path_style: bool,
+    /// The AWS profile to read credentials from; `None` follows the default chain.
+    profile: Option<String>,
 }
 
 impl From<&StorageSettings> for S3Settings {
@@ -69,6 +71,7 @@ impl From<&StorageSettings> for S3Settings {
             endpoint: settings.endpoint.as_ref().map(Url::to_string),
             region: settings.region.clone(),
             path_style: settings.path_style,
+            profile: settings.aws_profile.clone(),
         }
     }
 }
@@ -139,7 +142,8 @@ impl S3Storage {
             .credentials
             .get_or_try_init(|| async {
                 let timeouts = CatalogTimeouts::default();
-                AwsCredentials::from_environment(&self.settings.region, None, &timeouts).await
+                let profile = self.settings.profile.as_deref();
+                AwsCredentials::from_environment(&self.settings.region, profile, &timeouts).await
             })
             .await
             .map_err(|error| no_credentials(error.to_string()))?;

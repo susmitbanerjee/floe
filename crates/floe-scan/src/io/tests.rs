@@ -99,6 +99,7 @@ pub(crate) fn guard(prefix: &str) -> Result<LocationGuard, url::ParseError> {
         path_style: false,
         allowed_prefixes: vec![Url::parse(prefix)?],
         allow_local_files: true,
+        aws_profile: None,
     }))
 }
 

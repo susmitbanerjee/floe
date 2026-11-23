@@ -77,6 +77,8 @@ It must never write.
   - They come from `floe_catalog::AwsCredentials`, the cache the catalog's SigV4 signer uses,
     moved out of the signer unchanged.
   - The chain loads on the first read, so `floe serve` starts without touching AWS.
+  - It uses `[catalog.sigv4] profile` when set (added 2026-11-23: before, S3 reads ignored it
+    and could run as a different identity from the catalog), and the default chain otherwise.
 - **Locations.** `Storages` routes `s3://` and `s3a://` to one shared `S3Storage` per catalog,
   and `file://` to the local filesystem (tests only: the location guard keeps it to allowed
   prefixes). Any other scheme is refused, naming it.

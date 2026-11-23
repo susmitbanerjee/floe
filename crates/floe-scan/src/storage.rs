@@ -59,6 +59,7 @@ mod tests {
             path_style: true,
             allowed_prefixes: vec![Url::parse("s3://warehouse/")?],
             allow_local_files: false,
+            aws_profile: None,
         });
         let is_s3 = |location: &str| {
             storages
