@@ -32,6 +32,9 @@ pub(super) struct CatalogTable {
     pub(super) uri: String,
     pub(super) warehouse: String,
     pub(super) credential: Option<SecretReference>,
+    /// Accept a plain-http `uri` on another host (docs/adr/0012). Off unless written.
+    #[serde(default)]
+    pub(super) allow_plain_http: bool,
     pub(super) sigv4: Option<SigV4Table>,
 }
 
@@ -53,4 +56,7 @@ pub(super) struct StorageTable {
     pub(super) path_style: bool,
     pub(super) allowed_prefixes: Vec<String>,
     pub(super) allow_local_files: bool,
+    /// Accept a plain-http `endpoint` on another host (docs/adr/0012). Off unless written.
+    #[serde(default)]
+    pub(super) allow_plain_http: bool,
 }

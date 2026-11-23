@@ -27,6 +27,7 @@ struct Doc {
     uri: &'static str,
     warehouse: &'static str,
     credential: Option<&'static str>,
+    catalog_extra: &'static str,
     sigv4: Option<(&'static str, &'static str)>,
     sigv4_extra: &'static str,
     region: &'static str,
@@ -46,6 +47,7 @@ impl Default for Doc {
             uri: r#""http://127.0.0.1:8181/catalog""#,
             warehouse: r#""demo""#,
             credential: None,
+            catalog_extra: "",
             sigv4: None,
             sigv4_extra: "",
             region: r#""us-east-1""#,
@@ -70,6 +72,7 @@ impl Doc {
         if let Some(credential) = self.credential {
             text += &format!("credential = {credential}\n");
         }
+        text += &format!("{}\n", self.catalog_extra);
         if let Some((region, service)) = self.sigv4 {
             text += &format!(
                 "[catalog.sigv4]\nregion = {region}\nservice = {service}\n{}\n",

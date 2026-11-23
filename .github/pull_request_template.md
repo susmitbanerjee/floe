@@ -63,7 +63,7 @@ The gate already enforces formatting, the lints (no `unwrap`, `expect`, `panic!`
 
 - [ ] No secret can reach a log line, an error, `Debug` output, a panic or a client message.
 - [ ] New input is parsed into a checked type at the boundary.
-- [ ] Every new outbound call uses TLS (plain http only to this machine, ADR 0012), has connect
+- [ ] Every new outbound call uses TLS (plain http only where ADR 0012 allows it), has connect
       and total timeouts, and retries idempotent reads only.
 - [ ] The statement allow-list and the location guard are unchanged, or the change is reviewed
       line by line.
