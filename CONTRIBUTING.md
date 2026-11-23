@@ -15,7 +15,9 @@ git commit -s -m "feat(pg): answer the startup message"
 
 This adds a `Signed-off-by: Your Name <you@example.com>` line that must match the commit author.
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/). Pull
-requests with unsigned commits can't be merged.
+requests with unsigned commits can't be merged: CI's `dco` job runs `scripts/dco.sh` on every
+pull request. To sign off commits you already made, run `git rebase --signoff main` and push
+again.
 
 ## Run the gate
 
