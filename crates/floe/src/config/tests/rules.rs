@@ -105,12 +105,42 @@ fn rule_2_limits_stay_in_range() {
 }
 
 #[test]
-fn rule_3_catalog_uri_is_http_or_https_and_https_with_auth() {
+fn rule_3_urls_use_https_except_to_loopback_and_always_with_auth() {
     let bad_url = |e: &ConfigError| matches!(e, ConfigError::InvalidUrl { .. });
     check(
         "rule 3",
         &[
             ("plain http without auth", |_| {}, Expect::Valid),
+            (
+                "plain http to localhost",
+                |d| d.uri = r#""http://localhost:8181/catalog""#,
+                Expect::Valid,
+            ),
+            (
+                "plain http to ipv6 loopback",
+                |d| d.uri = r#""http://[::1]:8181/catalog""#,
+                Expect::Valid,
+            ),
+            (
+                "plain http to another host",
+                |d| d.uri = r#""http://catalog.example.com/iceberg""#,
+                Expect::Invalid(
+                    bad_url,
+                    "catalog.uri uses plain http to a host that isn't this machine. fix: change \
+                     catalog.uri to https://, or to http://127.0.0.1 when the service runs on \
+                     this machine",
+                ),
+            ),
+            (
+                "plain http to a private address",
+                |d| d.uri = r#""http://10.0.0.5:8181/catalog""#,
+                Expect::Invalid(bad_url, "catalog.uri uses plain http"),
+            ),
+            (
+                "plain http to a name that only looks local",
+                |d| d.uri = r#""http://127.0.0.1.nip.io:8181/catalog""#,
+                Expect::Invalid(bad_url, "catalog.uri uses plain http"),
+            ),
             (
                 "https with a credential",
                 |d| {
@@ -148,6 +178,19 @@ fn rule_3_catalog_uri_is_http_or_https_and_https_with_auth() {
                 "MinIO endpoint",
                 |d| d.endpoint = Some(r#""http://127.0.0.1:9000""#),
                 Expect::Valid,
+            ),
+            (
+                "https storage endpoint on another host",
+                |d| d.endpoint = Some(r#""https://minio.example.com""#),
+                Expect::Valid,
+            ),
+            (
+                "plain http storage endpoint on another host",
+                |d| d.endpoint = Some(r#""http://minio.example.com:9000""#),
+                Expect::Invalid(
+                    bad_url,
+                    "storage.endpoint uses plain http to a host that isn't this machine",
+                ),
             ),
         ],
     );

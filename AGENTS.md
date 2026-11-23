@@ -39,7 +39,9 @@
 - #![forbid(unsafe_code)] everywhere (workspace lint).
 - Secrets are secrecy::SecretString. Never in logs, errors, Debug output or panics.
   Config refers to them as "env:NAME"; examples never hold real values.
-- Every outbound call uses TLS (rustls) and has a connect timeout and a total timeout.
+- Every outbound call uses TLS (rustls) and has a connect timeout and a total timeout. The one
+  exception is plain http to this machine (a loopback address or localhost), for local labs
+  such as MinIO and Lakekeeper (docs/adr/0012-plain-http-loopback-only.md).
   Retry only idempotent reads, with backoff and a cap.
 - Treat clients and catalogs as untrusted:
   - SQL passes an allow-list: SELECT, EXPLAIN, SHOW, and SET for approved session settings only.

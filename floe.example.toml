@@ -12,9 +12,9 @@ max_connections = 64
 statement_timeout = "60s"
 
 [catalog]
-# Iceberg REST catalog base URI, http or https. Lakekeeper in floe-lab; Glue uses
-# https://glue.<region>.amazonaws.com/iceberg. Must be https when credential or [catalog.sigv4]
-# is set.
+# Iceberg REST catalog base URI. https, or plain http to this machine only (127.0.0.1, [::1] or
+# localhost). Lakekeeper in floe-lab; Glue uses https://glue.<region>.amazonaws.com/iceberg.
+# Must be https when credential or [catalog.sigv4] is set.
 uri = "http://127.0.0.1:8181/catalog"
 # Warehouse to open, as the catalog names it. Lakekeeper: the warehouse name.
 # AWS Glue: your AWS account ID, such as "123456789012".
@@ -39,7 +39,8 @@ warehouse = "demo"
 [storage]
 # AWS region used to sign storage requests, such as us-east-1. MinIO accepts us-east-1.
 region = "us-east-1"
-# S3-compatible endpoint, http or https. MinIO in floe-lab; omit it for AWS S3.
+# S3-compatible endpoint: https, or plain http to this machine only. MinIO in floe-lab; omit it
+# for AWS S3.
 # endpoint = "http://127.0.0.1:9000"
 # Address buckets as endpoint/bucket instead of bucket.endpoint. MinIO needs true; AWS, false.
 path_style = false

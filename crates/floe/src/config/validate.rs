@@ -6,7 +6,7 @@ use std::time::Duration;
 use floe_catalog::{CatalogSettings, CatalogTimeouts, SigV4Service, SigV4Settings};
 use floe_pg::ServerSettings;
 use floe_scan::StorageSettings;
-use url::Url;
+use url::{Host, Url};
 
 use super::file::{CatalogTable, Config, ServerTable, SigV4Table, StorageTable};
 use super::{ConfigError, ValidConfig};
@@ -195,18 +195,43 @@ fn storage_settings(
     })
 }
 
-/// An absolute http or https URL. The URL itself is never repeated: it may carry a password.
+/// Rule 3: an absolute https URL, or plain http to this machine only (docs/adr/0012), so
+/// signed requests and table data never cross a network in plain text. The URL itself is never
+/// repeated: it may carry a password.
 fn http_url(key: &'static str, text: &str) -> Result<Url, ConfigError> {
-    match Url::parse(text) {
-        Ok(url) if matches!(url.scheme(), "http" | "https") && url.has_host() => Ok(url),
-        _ => Err(ConfigError::InvalidUrl {
+    let url = match Url::parse(text) {
+        Ok(url) if matches!(url.scheme(), "http" | "https") && url.has_host() => url,
+        _ => {
+            return Err(ConfigError::InvalidUrl {
+                key,
+                reason: "is not an http or https URL".to_owned(),
+                fix: format!(
+                    "write {key} as an http or https URL with a host, such as \
+                     http://127.0.0.1:8181/catalog"
+                ),
+            });
+        }
+    };
+    if url.scheme() == "http" && !is_loopback(&url) {
+        return Err(ConfigError::InvalidUrl {
             key,
-            reason: "is not an http or https URL".to_owned(),
+            reason: "uses plain http to a host that isn't this machine".to_owned(),
             fix: format!(
-                "write {key} as an http or https URL with a host, such as \
-                 http://127.0.0.1:8181/catalog"
+                "change {key} to https://, or to http://127.0.0.1 when the service runs on this \
+                 machine"
             ),
-        }),
+        });
+    }
+    Ok(url)
+}
+
+/// Whether `url` names this machine: a loopback address, or `localhost`.
+fn is_loopback(url: &Url) -> bool {
+    match url.host() {
+        Some(Host::Ipv4(address)) => address.is_loopback(),
+        Some(Host::Ipv6(address)) => address.is_loopback(),
+        Some(Host::Domain(name)) => name == "localhost",
+        None => false,
     }
 }
 
