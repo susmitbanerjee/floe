@@ -31,7 +31,9 @@
   carry context (table, URI), never secrets.
 - anyhow only in the floe binary's main and CLI glue, always with .context("what Floe was doing").
 - No unwrap, expect, panic!, todo!, unimplemented! outside tests. A truly impossible case uses
-  expect("INVARIANT: <why>") and needs reviewer sign-off.
+  .expect("INVARIANT: <why>") under #[expect(clippy::expect_used, reason = "INVARIANT: <why>")]
+  on the enclosing statement or function, and needs reviewer sign-off. Without the attribute the
+  gate fails; if the expect later goes away, the leftover attribute fails the gate too.
 - Messages a person sees say what happened, why, and what to do next.
   Postgres clients get the matching SQLSTATE.
 

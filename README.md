@@ -56,6 +56,16 @@ A failure says what went wrong and how to fix it, on stderr, and exits with:
 | 71 | cannot bind the Postgres listener |
 | 78 | config invalid |
 
+## Limits
+
+- **Tables are fixed at first use.** `floe serve` lists the catalog's tables once, at startup,
+  and loads each table's metadata the first time a query reads it. It keeps both until it
+  restarts, so tables created later, and snapshots committed later, show up only after a
+  restart. If the lake expires old snapshots and deletes their files, a long-running Floe can
+  fail to read a table until it restarts. The snapshot watcher arrives in v0.1.
+- **No authentication.** Floe listens on loopback only, and anyone who can connect there can
+  query every table Floe can read. Password login arrives in v0.1.
+
 ## Testing
 
 `cargo nextest run --workspace` runs every hermetic test, including three end-to-end suites

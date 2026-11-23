@@ -71,7 +71,9 @@ unreachable_pub = "warn"
 
 [workspace.lints.clippy]
 unwrap_used = "deny"
-expect_used = "warn"
+# Denied like unwrap. A truly impossible case carries
+# #[expect(clippy::expect_used, reason = "INVARIANT: <why>")] (AGENTS.md, "Errors").
+expect_used = "deny"
 panic = "deny"
 todo = "deny"
 unimplemented = "deny"
