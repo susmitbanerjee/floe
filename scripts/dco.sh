@@ -15,10 +15,13 @@ base=$1
 head=$2
 
 missing=0
+lower() { tr '[:upper:]' '[:lower:]'; }
+
 for commit in $(git rev-list --no-merges "$base..$head"); do
-    email=$(git log -1 --format='%ae' "$commit")
-    signed=$(git log -1 --format='%(trailers:key=Signed-off-by,valueonly)' "$commit")
-    if grep -qiF "<$email>" <<<"$signed"; then
+    # Emails compare case-insensitively. No grep -iF: Git for Windows' grep 3.0 aborts on it.
+    email=$(git log -1 --format='%ae' "$commit" | lower)
+    signed=$(git log -1 --format='%(trailers:key=Signed-off-by,valueonly)' "$commit" | lower)
+    if [[ $signed == *"<$email>"* ]]; then
         continue
     fi
     echo "::error::$(git log -1 --format='%h %s' "$commit"): no Signed-off-by for its author <$email>"
