@@ -12,10 +12,13 @@ max_connections = 64
 statement_timeout = "60s"
 
 [catalog]
-# Iceberg REST catalog base URI. https, or plain http to this machine only (127.0.0.1, [::1] or
+# Iceberg REST catalog base URI. https, or plain http to this machine (127.0.0.1, [::1] or
 # localhost). Lakekeeper in floe-lab; Glue uses https://glue.<region>.amazonaws.com/iceberg.
 # Must be https when credential or [catalog.sigv4] is set.
 uri = "http://127.0.0.1:8181/catalog"
+# Also accept a plain-http uri on another host, such as http://lakekeeper:8181/catalog between
+# containers. Only on a private network you control; Floe logs a warning when it is used.
+allow_plain_http = false
 # Warehouse to open, as the catalog names it. Lakekeeper: the warehouse name.
 # AWS Glue: your AWS account ID, such as "123456789012".
 # S3 Tables through Glue: "<account>:s3tablescatalog/<table-bucket>".
@@ -48,3 +51,7 @@ path_style = false
 allowed_prefixes = ["s3://warehouse/"]
 # Allow file:// prefixes. True only for local tests; Floe logs a warning when it is on.
 allow_local_files = false
+# Also accept a plain-http endpoint on another host, such as http://minio:9000 between
+# containers. Requests stay SigV4-signed, but they and the table data are readable on that
+# network: only on a private network you control. Floe logs a warning when it is used.
+allow_plain_http = false

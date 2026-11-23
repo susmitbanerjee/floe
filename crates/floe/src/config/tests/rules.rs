@@ -197,6 +197,71 @@ fn rule_3_urls_use_https_except_to_loopback_and_always_with_auth() {
 }
 
 #[test]
+fn rule_3_a_url_can_opt_in_to_plain_http_on_a_private_network() {
+    let bad_url = |e: &ConfigError| matches!(e, ConfigError::InvalidUrl { .. });
+    check(
+        "rule 3 opt-in",
+        &[
+            (
+                "catalog by container service name, opted in",
+                |d| {
+                    d.uri = r#""http://lakekeeper:8181/catalog""#;
+                    d.catalog_extra = "allow_plain_http = true";
+                },
+                Expect::Valid,
+            ),
+            (
+                "catalog by container service name, not opted in",
+                |d| d.uri = r#""http://lakekeeper:8181/catalog""#,
+                Expect::Invalid(
+                    bad_url,
+                    "on a private network you control, such as between containers, set \
+                     catalog.allow_plain_http = true",
+                ),
+            ),
+            (
+                "catalog opted in explicitly off",
+                |d| {
+                    d.uri = r#""http://lakekeeper:8181/catalog""#;
+                    d.catalog_extra = "allow_plain_http = false";
+                },
+                Expect::Invalid(bad_url, "catalog.uri uses plain http"),
+            ),
+            (
+                "the opt-in never lets a credential cross plain http",
+                |d| {
+                    d.uri = r#""http://lakekeeper:8181/catalog""#;
+                    d.catalog_extra = "allow_plain_http = true";
+                    d.credential = Some(r#""env:FLOE_CATALOG_TOKEN""#);
+                },
+                Expect::Invalid(bad_url, "catalog.uri must use https"),
+            ),
+            (
+                "MinIO by container service name, opted in",
+                |d| {
+                    d.endpoint = Some(r#""http://minio:9000""#);
+                    d.trailer = "allow_plain_http = true";
+                },
+                Expect::Valid,
+            ),
+            (
+                "MinIO by container service name, not opted in",
+                |d| d.endpoint = Some(r#""http://minio:9000""#),
+                Expect::Invalid(bad_url, "set storage.allow_plain_http = true"),
+            ),
+            (
+                "the catalog's opt-in doesn't cover storage",
+                |d| {
+                    d.endpoint = Some(r#""http://minio:9000""#);
+                    d.catalog_extra = "allow_plain_http = true";
+                },
+                Expect::Invalid(bad_url, "storage.endpoint uses plain http"),
+            ),
+        ],
+    );
+}
+
+#[test]
 fn rule_4_sigv4_names_a_known_service_and_a_region() {
     let bad_service = |e: &ConfigError| matches!(e, ConfigError::InvalidSigV4Service { .. });
     let bad_region = |e: &ConfigError| matches!(e, ConfigError::InvalidRegion { .. });

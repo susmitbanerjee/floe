@@ -96,7 +96,7 @@ fn catalog_settings(
     table: CatalogTable,
     lookup: &dyn Fn(&str) -> Option<String>,
 ) -> Result<CatalogSettings, ConfigError> {
-    let uri = http_url("catalog.uri", &table.uri)?;
+    let uri = http_url("catalog.uri", &table.uri, table.allow_plain_http)?;
     if table.credential.is_some() && table.sigv4.is_some() {
         return Err(ConfigError::ConflictingCatalogAuth);
     }
@@ -169,7 +169,7 @@ fn storage_settings(
     let endpoint = table
         .endpoint
         .as_deref()
-        .map(|endpoint| http_url("storage.endpoint", endpoint))
+        .map(|endpoint| http_url("storage.endpoint", endpoint, table.allow_plain_http))
         .transpose()?;
     if table.allowed_prefixes.is_empty() {
         return Err(ConfigError::NoAllowedPrefixes);
@@ -195,10 +195,11 @@ fn storage_settings(
     })
 }
 
-/// Rule 3: an absolute https URL, or plain http to this machine only (docs/adr/0012), so
-/// signed requests and table data never cross a network in plain text. The URL itself is never
-/// repeated: it may carry a password.
-fn http_url(key: &'static str, text: &str) -> Result<Url, ConfigError> {
+/// Rule 3: an absolute https URL, or plain http to this machine, so signed requests and table
+/// data don't cross a network in plain text. `allow_plain_http`, the URL's own opt-in, also
+/// accepts plain http to another host, for a private network such as one between containers
+/// (docs/adr/0012). The URL itself is never repeated: it may carry a password.
+fn http_url(key: &'static str, text: &str, allow_plain_http: bool) -> Result<Url, ConfigError> {
     let url = match Url::parse(text) {
         Ok(url) if matches!(url.scheme(), "http" | "https") && url.has_host() => url,
         _ => {
@@ -213,14 +214,22 @@ fn http_url(key: &'static str, text: &str) -> Result<Url, ConfigError> {
         }
     };
     if url.scheme() == "http" && !is_loopback(&url) {
-        return Err(ConfigError::InvalidUrl {
-            key,
-            reason: "uses plain http to a host that isn't this machine".to_owned(),
-            fix: format!(
-                "change {key} to https://, or to http://127.0.0.1 when the service runs on this \
-                 machine"
-            ),
-        });
+        let table = key.split('.').next().unwrap_or(key);
+        if !allow_plain_http {
+            return Err(ConfigError::InvalidUrl {
+                key,
+                reason: "uses plain http to a host that isn't this machine".to_owned(),
+                fix: format!(
+                    "change {key} to https://, or to http://127.0.0.1 when the service runs on \
+                     this machine; on a private network you control, such as between \
+                     containers, set {table}.allow_plain_http = true"
+                ),
+            });
+        }
+        tracing::warn!(
+            "{table}.allow_plain_http is true, so Floe reaches {key} over plain http on another \
+             host. Use it only on a private network you control."
+        );
     }
     Ok(url)
 }

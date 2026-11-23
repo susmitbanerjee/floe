@@ -42,8 +42,10 @@ Global flags: `--log-format text|json` (default `text`) and
 stderr. Floe reads S3 and catalog credentials from the standard AWS chain (environment,
 `AWS_PROFILE`, SSO, instance or pod role), never from the config file. When `[catalog.sigv4]`
 names a `profile`, Floe reads the catalog and S3 with it. `catalog.uri` and `storage.endpoint`
-must use https, except plain http to this machine (`127.0.0.1`, `[::1]` or `localhost`) for a
-local lab ([ADR 0012](docs/adr/0012-plain-http-loopback-only.md)).
+must use https, except plain http to this machine (`127.0.0.1`, `[::1]` or `localhost`). On a
+private network you control, such as Floe in a container reaching `http://minio:9000`, set
+`allow_plain_http = true` in that URL's table
+([ADR 0012](docs/adr/0012-plain-http-loopback-only.md)).
 
 A failure says what went wrong and how to fix it, on stderr, and exits with:
 
