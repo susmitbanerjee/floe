@@ -1,0 +1,21 @@
+[package]
+name = "iceblink-testkit"
+description = "Test fixtures for Iceblink: real, deterministic Iceberg tables in a temp dir."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+# For its `arrow` re-export only (ADR 0001: Arrow comes through DataFusion).
+datafusion.workspace = true
+iceberg.workspace = true
+parquet.workspace = true
+tempfile.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt"] }
+
+[lints]
+workspace = true

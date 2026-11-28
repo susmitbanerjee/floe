@@ -1,0 +1,58 @@
+# iceblink.toml: Iceblink's only config file. Iceblink reads ./iceblink.toml, or the file
+# --config names.
+# Copy this file to iceblink.toml and edit it. Secrets never go in this file: write env:NAME and
+# set the environment variable NAME before starting Iceblink.
+
+[server]
+# Address the Postgres listener binds. Loopback only (127.0.0.0/8 or [::1]): this build has
+# no authentication. Password login arrives in v0.1.
+pg_listen = "127.0.0.1:5432"
+# Most client connections open at once, from 1 to 1024.
+max_connections = 64
+# Longest a single statement may run: a whole number and a unit (ms, s, m or h), from 1s to 1h.
+statement_timeout = "60s"
+
+[catalog]
+# Iceberg REST catalog base URI. https, or plain http to this machine (127.0.0.1, [::1] or
+# localhost). Lakekeeper in iceblink-lab; Glue uses https://glue.<region>.amazonaws.com/iceberg.
+# Must be https when credential or [catalog.sigv4] is set.
+uri = "http://127.0.0.1:8181/catalog"
+# Also accept a plain-http uri on another host, such as http://lakekeeper:8181/catalog between
+# containers. Only on a private network you control; Iceblink logs a warning when it is used.
+allow_plain_http = false
+# Warehouse to open, as the catalog names it. Lakekeeper: the warehouse name.
+# AWS Glue: your AWS account ID, such as "123456789012".
+# S3 Tables through Glue: "<account>:s3tablescatalog/<table-bucket>".
+warehouse = "demo"
+# Bearer token for REST catalogs that need one, as env:NAME (NAME in uppercase letters, digits
+# and underscores). The token itself never goes here. Don't combine it with [catalog.sigv4].
+# credential = "env:ICEBLINK_CATALOG_TOKEN"
+
+# AWS SigV4 request signing, for AWS endpoints only. Credentials come from the standard AWS chain
+# (environment, profile, SSO, instance or pod role), never from this file.
+# [catalog.sigv4]
+# AWS region of the catalog endpoint, such as ap-south-1.
+# region = "ap-south-1"
+# AWS service to sign for: "glue" for AWS Glue (also S3 Tables through Glue), or "s3tables" for
+# the S3 Tables endpoint itself.
+# service = "glue"
+# AWS profile to take credentials from, for the catalog and for S3 reads alike. Omit it to
+# follow AWS_PROFILE and the default chain.
+# profile = "analytics"
+
+[storage]
+# AWS region used to sign storage requests, such as us-east-1. MinIO accepts us-east-1.
+region = "us-east-1"
+# S3-compatible endpoint: https, or plain http to this machine only. MinIO in iceblink-lab; omit it
+# for AWS S3.
+# endpoint = "http://127.0.0.1:9000"
+# Address buckets as endpoint/bucket instead of bucket.endpoint. MinIO needs true; AWS, false.
+path_style = false
+# Iceblink reads tables and files only under these. Each is s3://bucket/prefix/, ending in a slash.
+allowed_prefixes = ["s3://warehouse/"]
+# Allow file:// prefixes. True only for local tests; Iceblink logs a warning when it is on.
+allow_local_files = false
+# Also accept a plain-http endpoint on another host, such as http://minio:9000 between
+# containers. Requests stay SigV4-signed, but they and the table data are readable on that
+# network: only on a private network you control. Iceblink logs a warning when it is used.
+allow_plain_http = false

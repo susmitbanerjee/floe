@@ -1,11 +1,11 @@
-# 0008. The Postgres server: a hook, a handler wrapper and Floe's own accept loop
+# 0008. The Postgres server: a hook, a handler wrapper and Iceblink's own accept loop
 
 - Status: Accepted
 - Date: 2026-11-20
 
 ## Context
 
-`floe_pg::serve(session_factory, settings, shutdown)` serves the `lake` session (ADR 0007) to
+`iceblink_pg::serve(session_factory, settings, shutdown)` serves the `lake` session (ADR 0007) to
 psql and BI tools. The prompt asked for:
 - datafusion-postgres's handlers and pg_catalog, hooked or wrapped, never forked;
 - a statement allow-list;
@@ -58,10 +58,10 @@ arrow-pg 0.15.0:
 
 **Option 3 for the read-only rules: a hook and a wrapper.**
 
-**`FloeHook`** runs first after the library's transaction hook. It holds:
+**`PgHook`** runs first after the library's transaction hook. It holds:
 - **The allow-list** (`allow.rs`):
   - **Run:** SELECT, WITH, VALUES, EXPLAIN [ANALYZE] of those, SHOW TABLES and SHOW COLUMNS.
-  - **Floe's own settings:** SET for `statement_timeout`, `search_path` and `client_encoding`,
+  - **Iceblink's own settings:** SET for `statement_timeout`, `search_path` and `client_encoding`,
     and `SHOW statement_timeout`.
   - **Left to the library:** application_name, DateStyle, extra_float_digits, TimeZone, other
     SHOWs, BEGIN, COMMIT and ROLLBACK (no-ops).
@@ -71,14 +71,14 @@ arrow-pg 0.15.0:
 - **Simple-protocol queries.** The hook plans each one, checks the plan with DataFusion's
   `SQLOptions` (no DDL, no DML, no statements), and starts it.
 
-**`FloeHandler`** wraps `DfSessionService` for what a hook can't do:
+**`PgHandler`** wraps `DfSessionService` for what a hook can't do:
 - **Extended protocol.** Before running a portal it checks the plan with the same
   `SQLOptions`, then tracks the rows. Only the library knows the portal's result formats, so
   it runs them.
 - **Shutdown.** It keeps a connection busy from its first message until the reply is flushed.
 - **Unparsable SQL.** It maps parse errors to 25006 for changing verbs.
 
-**Floe's own accept loop** around pgwire's `process_socket`:
+**Iceblink's own accept loop** around pgwire's `process_socket`:
 - **Connection limit.** A semaphore. Over the limit, a connection is refused after its startup
   message with FATAL 53300, as Postgres does. Cancel requests still reach the server.
 - **Shutdown.**
@@ -91,8 +91,8 @@ arrow-pg 0.15.0:
 - **Statement timeout.** It covers planning and every row (`statement.rs`).
   `SET statement_timeout` can only lower it: a higher value, or 0, gets 22023.
 
-**Startup.** Floe reports:
-- `server_version` = `16.6 (Floe <version>)`;
+**Startup.** Iceblink reports:
+- `server_version` = `16.6 (Iceblink <version>)`;
 - `client_encoding` = UTF8;
 - `integer_datetimes` = on;
 - `DateStyle` = pgwire's default;
@@ -131,7 +131,7 @@ scans as empty instead of failing. The server tests found this.
 | *added* 42703 / 42000 | Unknown column / other planning errors. They keep DataFusion's message, which names only SQL, rather than being hidden as XX000 |
 | *added* 57P01 / 57P03 | A new statement / a new connection while shutting down (FATAL) |
 
-**One span per statement.** It covers every query, refusal and Floe setting. Its fields:
+**One span per statement.** It covers every query, refusal and Iceblink setting. Its fields:
 - `query_id` and `fingerprint` (the AST with every literal as `?`);
 - `snapshot_ids`, `files_scanned` and `bytes_read`, from a `QueryReceipt` that each scan records
   into;
@@ -152,8 +152,8 @@ answers itself (BEGIN, SET DateStyle, SHOW search_path) get no span.
   - internal errors that show no path;
   - a drain that finishes a streaming query and refuses newcomers.
 - **The library's internals are pinned.**
-  - Floe relies on DataFusion's planning messages for 42P01 and 3F000.
-  - Floe relies on the library's statement type in the extended protocol.
+  - Iceblink relies on DataFusion's planning messages for 42P01 and 3F000.
+  - Iceblink relies on the library's statement type in the extended protocol.
   - The unit tests pin both, but upgrading datafusion-postgres or DataFusion means re-reading
     `handlers.rs`, `hooks/set_show.rs` and `session_state.rs`.
 - **Per-connection setup.** Every new connection costs a pg_catalog setup. Revisit with the

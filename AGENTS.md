@@ -1,8 +1,8 @@
-# Floe engineering rules
+# Iceblink engineering rules
 
 ## The product contract (never break)
 - Read-only: no code path writes, deletes or commits user tables or objects. Tests assert zero write requests.
-- No copies: Floe never copies source data. Caches and indexes are derived and disposable.
+- No copies: Iceblink never copies source data. Caches and indexes are derived and disposable.
 - Every query can say what it read: snapshot, files, bytes.
 - Background work stays inside configured budgets (from v0.3).
 
@@ -16,7 +16,7 @@
 - No custom macros unless they remove real duplication in three or more places.
 
 ## Structure
-- Crates depend one way: floe -> floe-pg -> floe-scan -> floe-catalog. No cycles, no upward imports.
+- Crates depend one way: iceblink -> iceblink-pg -> iceblink-scan -> iceblink-catalog. No cycles, no upward imports.
 - One module, one job. Aim for files under 400 lines, functions under 40 lines, at most 4 parameters
   (group the rest into a struct).
 - Keep the public surface small: pub(crate) by default; lib.rs re-exports the crate's API only.
@@ -29,7 +29,7 @@
 ## Errors
 - Each library crate has one Error enum (thiserror, #[non_exhaustive]). Variants say what failed and
   carry context (table, URI), never secrets.
-- anyhow only in the floe binary's main and CLI glue, always with .context("what Floe was doing").
+- anyhow only in the iceblink binary's main and CLI glue, always with .context("what Iceblink was doing").
 - No unwrap, expect, panic!, todo!, unimplemented! outside tests. A truly impossible case uses
   .expect("INVARIANT: <why>") under #[expect(clippy::expect_used, reason = "INVARIANT: <why>")]
   on the enclosing statement or function, and needs reviewer sign-off. Without the attribute the
@@ -62,14 +62,14 @@
 - Measure before optimising, and keep the test or benchmark that shows the gain.
 
 ## Observability
-- tracing only. No println! outside crates/floe/src/cli/output.rs.
+- tracing only. No println! outside crates/iceblink/src/cli/output.rs.
 - One span per query with: query_id, fingerprint, snapshot_ids, files_scanned, bytes_read, elapsed_ms.
 - Levels: error needs a person; warn means degraded but working; info is lifecycle; debug is detail.
 
 ## Testing
 - Write the test first for every behaviour change. Unit tests sit beside the code; integration tests in tests/.
 - Hermetic by default: no network, Docker, wall clock or randomness unless injected.
-  Lab tests are #[ignore] and run with FLOE_LAB=1.
+  Lab tests are #[ignore] and run with ICEBLINK_LAB=1.
 - Table-driven tests for parsers and validators.
 - Test names describe behaviour, e.g. rejects_non_loopback_listen_without_auth.
 - Every bug fix lands with the test that would have caught it.
@@ -84,8 +84,8 @@
 - Small PRs: under 400 changed lines excluding tests and fixtures, where possible.
 - Conventional commits with DCO sign-off (git commit -s).
 - Before saying done, run the gate and paste the results:
-  cargo fmt --check; cargo clippy --all-targets --all-features -- -D warnings;
-  cargo nextest run; cargo deny check.
+  scripts/check-legacy-name.sh; cargo fmt --check;
+  cargo clippy --all-targets --all-features -- -D warnings; cargo nextest run; cargo deny check.
   Then list anything not done.
 - Check every external API against the docs for the exact version in Cargo.lock. Never invent an API.
   If reality differs from the prompt, stop and write docs/adr/NNNN-title.md with the options and a

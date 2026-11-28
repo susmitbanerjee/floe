@@ -1,5 +1,5 @@
 # Projections, filters, joins, grouping, ordering, limits and NULLs over the shop dataset.
-# Every expected result is worked out from the rows listed in crates/floe-suites/src/shop.rs.
+# Every expected result is worked out from the rows listed in crates/iceblink-suites/src/shop.rs.
 
 # Projection, all customers in key order.
 query IT

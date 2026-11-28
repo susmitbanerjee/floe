@@ -1,5 +1,5 @@
-# Round-trips for every type Floe promises, through the wire as Postgres text. The rows are
-# shop.types in crates/floe-suites/src/shop.rs; row 4 is all NULLs.
+# Round-trips for every type Iceblink promises, through the wire as Postgres text. The rows are
+# shop.types in crates/iceblink-suites/src/shop.rs; row 4 is all NULLs.
 
 # bigint: the extremes and zero.
 query II
@@ -45,7 +45,7 @@ SELECT id, day FROM types ORDER BY id
 3 2024-02-29
 4 NULL
 
-# timestamptz, in UTC: midnight, microseconds kept, and a mid-day value. Floe always prints
+# timestamptz, in UTC: midnight, microseconds kept, and a mid-day value. Iceblink always prints
 # six fractional digits, where Postgres drops them when they are zero; clients parse both.
 query IT
 SELECT id, at FROM types ORDER BY id

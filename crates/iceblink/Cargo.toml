@@ -1,0 +1,43 @@
+[package]
+name = "iceblink"
+description = "Serves Apache Iceberg tables over the Postgres wire protocol, read-only."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "iceblink"
+path = "src/main.rs"
+# The library carries the docs; documenting both would collide on the name.
+doc = false
+
+[dependencies]
+anyhow = { workspace = true, features = ["std"] }
+# No "color" feature: help and usage errors stay plain text (ADR 0010).
+clap = { workspace = true, features = ["std", "help", "usage", "error-context", "derive"] }
+iceblink-catalog.workspace = true
+iceblink-pg.workspace = true
+iceblink-scan.workspace = true
+secrecy.workspace = true
+serde = { workspace = true, features = ["std", "derive"] }
+thiserror.workspace = true
+tokio = { workspace = true, features = ["macros", "net", "rt-multi-thread", "signal", "time"] }
+tokio-util.workspace = true
+toml = { workspace = true, features = ["std", "parse", "serde"] }
+tracing = { workspace = true, features = ["std"] }
+# No "ansi" feature: log lines never carry escape codes (ADR 0010).
+tracing-subscriber = { workspace = true, features = ["env-filter", "fmt", "json", "std"] }
+url = { workspace = true, features = ["std"] }
+
+[dev-dependencies]
+assert_cmd.workspace = true
+iceblink-testkit.workspace = true
+futures = { workspace = true, features = ["std"] }
+tempfile.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tokio-postgres = { workspace = true, features = ["runtime"] }
+wiremock.workspace = true
+
+[lints]
+workspace = true

@@ -6,7 +6,7 @@
 ## Context
 
 AGENTS.md says every outbound call uses TLS. Phase 1 accepted `http://` for `catalog.uri` and
-`storage.endpoint` to any host whenever no catalog credential was set, because floe-lab runs
+`storage.endpoint` to any host whenever no catalog credential was set, because iceblink-lab runs
 Lakekeeper and MinIO on plain http. That left two gaps:
 
 - S3 requests are SigV4-signed with real AWS credentials whether or not the endpoint is https.
@@ -15,7 +15,7 @@ Lakekeeper and MinIO on plain http. That left two gaps:
 - A catalog on another host could be reached over http, so its answers (table locations,
   metadata) could be changed in transit.
 
-Closing both must not break the common local setup where Floe runs in a container next to
+Closing both must not break the common local setup where Iceblink runs in a container next to
 Lakekeeper and MinIO and reaches them by service name, such as `http://minio:9000`, over a
 private container network.
 
@@ -41,12 +41,12 @@ private. It is the same pattern as `storage.allow_local_files`.
 
 ## Consequences
 
-- A config with `http://` to another host fails `floe config check` (exit 78) unless that URL's
+- A config with `http://` to another host fails `iceblink config check` (exit 78) unless that URL's
   table sets `allow_plain_http = true`. The error names both fixes: https, or the opt-in.
 - With the opt-in, S3 requests to that endpoint are still SigV4-signed: the signature is sent,
   never the secret key, but the requests and table data are readable on that network. Use it
   only on a network you control.
 - A catalog credential or `[catalog.sigv4]` still requires an https `catalog.uri`, opt-in or not.
-- The rule checks floe.toml only. URLs the catalog itself returns, such as a `uri` override in
+- The rule checks iceblink.toml only. URLs the catalog itself returns, such as a `uri` override in
   its `/v1/config` answer, aren't checked by it; whether iceberg-catalog-rest 0.11 follows such
   an override is worth checking in the v0.1 catalog work.

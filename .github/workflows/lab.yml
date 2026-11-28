@@ -1,7 +1,7 @@
 name: Lab
 
-# The gated suites against floe-lab (docs/floe-lab.md): nightly and on demand. Until the
-# repository variable FLOE_LAB_REPO names floe-lab (owner/name), the run is skipped with a
+# The gated suites against iceblink-lab (docs/iceblink-lab.md): nightly and on demand. Until the
+# repository variable ICEBLINK_LAB_REPO names iceblink-lab (owner/name), the run is skipped with a
 # notice, not failed.
 on:
   schedule:
@@ -24,10 +24,10 @@ jobs:
     steps:
       - id: check
         env:
-          FLOE_LAB_REPO: ${{ vars.FLOE_LAB_REPO }}
+          ICEBLINK_LAB_REPO: ${{ vars.ICEBLINK_LAB_REPO }}
         run: |
-          if [ -z "$FLOE_LAB_REPO" ]; then
-            echo "::notice title=Lab skipped::floe-lab doesn't exist yet. Set the repository variable FLOE_LAB_REPO to owner/name to run these tests."
+          if [ -z "$ICEBLINK_LAB_REPO" ]; then
+            echo "::notice title=Lab skipped::iceblink-lab doesn't exist yet. Set the repository variable ICEBLINK_LAB_REPO to owner/name to run these tests."
             echo "enabled=false" >> "$GITHUB_OUTPUT"
           else
             echo "enabled=true" >> "$GITHUB_OUTPUT"
@@ -44,11 +44,11 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: ${{ vars.FLOE_LAB_REPO }}
-          path: floe-lab
+          repository: ${{ vars.ICEBLINK_LAB_REPO }}
+          path: iceblink-lab
           persist-credentials: false
-      - name: Start floe-lab
-        working-directory: floe-lab
+      - name: Start iceblink-lab
+        working-directory: iceblink-lab
         run: docker compose up --wait
       - run: rustup toolchain install
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
@@ -56,29 +56,29 @@ jobs:
         with:
           tool: cargo-nextest@0.9.152
           fallback: none
-      - run: cargo build --locked -p floe
-      - name: Start floe serve
+      - run: cargo build --locked -p iceblink
+      - name: Start iceblink serve
         run: |
-          set -a; . floe-lab/floe.env; set +a
-          target/debug/floe serve --config floe-lab/floe.toml > floe.log 2>&1 &
+          set -a; . iceblink-lab/iceblink.env; set +a
+          target/debug/iceblink serve --config iceblink-lab/iceblink.toml > iceblink.log 2>&1 &
           for _ in $(seq 1 60); do
-            grep -q '^ready' floe.log && break
+            grep -q '^ready' iceblink.log && break
             sleep 1
           done
-          address=$(sed -n 's#^ready  postgres://\([^/]*\)/lake$#\1#p' floe.log)
-          test -n "$address" || { cat floe.log; exit 1; }
-          echo "FLOE_LAB_ADDR=$address" >> "$GITHUB_ENV"
+          address=$(sed -n 's#^ready  postgres://\([^/]*\)/lake$#\1#p' iceblink.log)
+          test -n "$address" || { cat iceblink.log; exit 1; }
+          echo "ICEBLINK_LAB_ADDR=$address" >> "$GITHUB_ENV"
       - name: Lab tests
         env:
-          FLOE_LAB: "1"
-          FLOE_LAB_DIR: ${{ github.workspace }}/floe-lab
+          ICEBLINK_LAB: "1"
+          ICEBLINK_LAB_DIR: ${{ github.workspace }}/iceblink-lab
         run: |
-          set -a; . floe-lab/floe.env; set +a
-          cargo nextest run --locked -p floe-suites --test lab --run-ignored ignored-only
-      - name: Floe log
+          set -a; . iceblink-lab/iceblink.env; set +a
+          cargo nextest run --locked -p iceblink-suites --test lab --run-ignored ignored-only
+      - name: Iceblink log
         if: always()
-        run: cat floe.log || true
-      - name: Stop floe-lab
+        run: cat iceblink.log || true
+      - name: Stop iceblink-lab
         if: always()
-        working-directory: floe-lab
+        working-directory: iceblink-lab
         run: docker compose down --volumes

@@ -1,0 +1,40 @@
+[package]
+name = "iceblink-scan"
+description = "Turns Iceberg tables into DataFusion scans for Iceblink and counts what they read."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+aws-credential-types.workspace = true
+# S3 reads (docs/adr/0009-s3-reads.md): SigV4 for GET and HEAD, the same crates the catalog uses.
+aws-sigv4 = { workspace = true, features = ["sign-http", "http1"] }
+aws-smithy-runtime-api.workspace = true
+bytes = { workspace = true, features = ["std"] }
+# parquet: read Iceberg data files. sql: plan SQL into DataFusion plans.
+datafusion = { workspace = true, features = ["parquet", "sql"] }
+iceblink-catalog.workspace = true
+futures = { workspace = true, features = ["std"] }
+iceberg.workspace = true
+iceberg-datafusion.workspace = true
+percent-encoding = { workspace = true, features = ["std"] }
+reqwest = { workspace = true, features = ["rustls-tls"] }
+# rc: the counting storage holds the shared inner storage as an Arc, and iceberg's storage
+# traits are serde (typetag) traits.
+serde = { workspace = true, features = ["derive", "rc"] }
+thiserror.workspace = true
+tokio = { workspace = true, features = ["sync", "time"] }
+typetag.workspace = true
+url = { workspace = true, features = ["std"] }
+
+[dev-dependencies]
+datafusion-postgres.workspace = true
+iceblink-testkit.workspace = true
+iceberg-catalog-rest.workspace = true
+tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread"] }
+wiremock.workspace = true
+
+[lints]
+workspace = true

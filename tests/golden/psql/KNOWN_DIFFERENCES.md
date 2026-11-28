@@ -1,9 +1,9 @@
-# Where psql against Floe differs from psql against Postgres
+# Where psql against Iceblink differs from psql against Postgres
 
-The golden files record what Floe answers today, including these differences. When one is
+The golden files record what Iceblink answers today, including these differences. When one is
 fixed, its golden file changes, and the reviewer checks the new output against Postgres.
 
-| Command | Floe shows | Postgres shows | Cause | Issue |
+| Command | Iceblink shows | Postgres shows | Cause | Issue |
 |---|---|---|---|---|
 | `\d sales.orders` | `created_at` as `text` | `timestamp with time zone` | datafusion-pg-catalog 0.18.3's `pg_attribute` maps only some Arrow types and falls back to `text`; it has no case for `TIMESTAMPTZ`. Query results are typed correctly (`tests/slt/types.slt`) | upstream, to file |
 | `\d sales.orders` | `amount` as `numeric` | `numeric(14,2)` | the same table always writes `atttypmod = -1`, so precision and scale are lost | upstream, to file |

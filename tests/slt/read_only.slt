@@ -1,49 +1,49 @@
 # Every statement that could change something is refused with SQLSTATE 25006 and names its
-# kind; a setting Floe doesn't support is 0A000. At the end the data is unchanged.
+# kind; a setting Iceblink doesn't support is 0A000. At the end the data is unchanged.
 
-statement error SQLSTATE 25006: Floe is read-only: CREATE TABLE is not allowed\.
+statement error SQLSTATE 25006: Iceblink is read-only: CREATE TABLE is not allowed\.
 CREATE TABLE scratch (a INT)
 
-statement error SQLSTATE 25006: Floe is read-only: CREATE TABLE is not allowed\.
+statement error SQLSTATE 25006: Iceblink is read-only: CREATE TABLE is not allowed\.
 CREATE TABLE scratch AS SELECT * FROM orders
 
-statement error SQLSTATE 25006: Floe is read-only: CREATE VIEW is not allowed\.
+statement error SQLSTATE 25006: Iceblink is read-only: CREATE VIEW is not allowed\.
 CREATE VIEW paid AS SELECT * FROM orders WHERE status = 'paid'
 
-statement error SQLSTATE 25006: Floe is read-only: CREATE SCHEMA is not allowed\.
+statement error SQLSTATE 25006: Iceblink is read-only: CREATE SCHEMA is not allowed\.
 CREATE SCHEMA scratch
 
-statement error SQLSTATE 25006: Floe is read-only: CREATE EXTERNAL TABLE is not allowed\.
+statement error SQLSTATE 25006: Iceblink is read-only: CREATE EXTERNAL TABLE is not allowed\.
 CREATE EXTERNAL TABLE passwd STORED AS CSV LOCATION '/etc/passwd'
 
-statement error SQLSTATE 25006: Floe is read-only: INSERT is not allowed\.
+statement error SQLSTATE 25006: Iceblink is read-only: INSERT is not allowed\.
 INSERT INTO orders (order_id, customer_id, status, ordered_on) VALUES (99, 1, 'paid', DATE '2026-02-01')
 
-statement error SQLSTATE 25006: Floe is read-only: UPDATE is not allowed\.
+statement error SQLSTATE 25006: Iceblink is read-only: UPDATE is not allowed\.
 UPDATE orders SET status = 'paid' WHERE order_id = 12
 
-statement error SQLSTATE 25006: Floe is read-only: DELETE is not allowed\.
+statement error SQLSTATE 25006: Iceblink is read-only: DELETE is not allowed\.
 DELETE FROM orders WHERE order_id = 15
 
-statement error SQLSTATE 25006: Floe is read-only: COPY is not allowed\.
-COPY orders TO '/tmp/floe-orders.csv'
+statement error SQLSTATE 25006: Iceblink is read-only: COPY is not allowed\.
+COPY orders TO '/tmp/iceblink-orders.csv'
 
-statement error SQLSTATE 25006: Floe is read-only: DROP TABLE is not allowed\.
+statement error SQLSTATE 25006: Iceblink is read-only: DROP TABLE is not allowed\.
 DROP TABLE orders
 
-statement error SQLSTATE 25006: Floe is read-only: ALTER TABLE is not allowed\.
+statement error SQLSTATE 25006: Iceblink is read-only: ALTER TABLE is not allowed\.
 ALTER TABLE orders ADD COLUMN note TEXT
 
-statement error SQLSTATE 25006: Floe is read-only: TRUNCATE is not allowed\.
+statement error SQLSTATE 25006: Iceblink is read-only: TRUNCATE is not allowed\.
 TRUNCATE orders
 
-statement error SQLSTATE 25006: Floe is read-only: GRANT is not allowed\.
+statement error SQLSTATE 25006: Iceblink is read-only: GRANT is not allowed\.
 GRANT SELECT ON orders TO someone
 
-statement error SQLSTATE 25006: Floe is read-only: DECLARE is not allowed\.
+statement error SQLSTATE 25006: Iceblink is read-only: DECLARE is not allowed\.
 DECLARE cursor_one CURSOR FOR SELECT * FROM orders
 
-statement error SQLSTATE 0A000: Floe doesn't support setting work_mem
+statement error SQLSTATE 0A000: Iceblink doesn't support setting work_mem
 SET work_mem = '64MB'
 
 # Nothing changed: still six orders, and order 12 is still cancelled.

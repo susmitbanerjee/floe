@@ -1,0 +1,44 @@
+[package]
+name = "iceblink-suites"
+description = "End-to-end suites for Iceblink: SQL logic, TPC-H and psql, through the Postgres wire."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+# The suites live in the workspace root's tests/ (docs/adr/0011-end-to-end-suites.md).
+autotests = false
+
+[[test]]
+name = "slt"
+path = "../../tests/slt.rs"
+
+[[test]]
+name = "tpch"
+path = "../../tests/tpch.rs"
+
+[[test]]
+name = "psql"
+path = "../../tests/psql.rs"
+
+[[test]]
+name = "lab"
+path = "../../tests/lab.rs"
+
+[dependencies]
+async-trait.workspace = true
+# For its `arrow` re-export (ADR 0001: Arrow comes through DataFusion).
+datafusion.workspace = true
+iceblink.workspace = true
+iceblink-catalog.workspace = true
+iceblink-testkit.workspace = true
+iceberg.workspace = true
+sqllogictest.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["macros", "net", "process", "rt-multi-thread", "time"] }
+tokio-postgres = { workspace = true, features = ["runtime"] }
+tokio-util.workspace = true
+tpchgen.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,30 @@
+[package]
+name = "iceblink-pg"
+description = "Speaks the Postgres wire protocol for Iceblink and enforces its SQL allow-list."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+datafusion = { workspace = true, features = ["sql"] }
+# Also brings pgwire, arrow-pg and datafusion-pg-catalog, used through its re-exports.
+datafusion-postgres.workspace = true
+iceblink-scan.workspace = true
+futures = { workspace = true, features = ["std"] }
+thiserror.workspace = true
+tokio = { workspace = true, features = ["macros", "net", "rt", "sync", "time"] }
+tokio-util.workspace = true
+tracing = { workspace = true, features = ["std"] }
+
+[dev-dependencies]
+iceblink-catalog.workspace = true
+iceblink-testkit.workspace = true
+tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread"] }
+tokio-postgres = { workspace = true, features = ["runtime"] }
+tracing-subscriber = { workspace = true, features = ["registry", "std"] }
+url = { workspace = true, features = ["std"] }
+
+[lints]
+workspace = true

@@ -54,7 +54,7 @@ jobs:
       # ubuntu-24.04 ships psql 16, matching tests/golden/psql/16: the psql suite must run here.
       - run: cargo nextest run --locked --workspace
         env:
-          FLOE_PSQL: "1"
+          ICEBLINK_PSQL: "1"
 
   coverage:
     # Report only: no threshold yet, and a failure here never fails the workflow.
@@ -95,6 +95,16 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
+  legacy-name:
+    # No legacy project name outside the allow-list (docs/adr/0013-rename-to-iceblink.md).
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: bash scripts/check-legacy-name.sh
 
   deny:
     runs-on: ubuntu-24.04

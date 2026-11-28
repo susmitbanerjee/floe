@@ -1,28 +1,28 @@
-//! Gated runs, ignored by default (docs/floe-lab.md has the setup and the files they read).
+//! Gated runs, ignored by default (docs/iceblink-lab.md has the setup and the files they read).
 //!
-//! - `FLOE_LAB=1`: against floe-lab (Lakekeeper and MinIO). The region query must equal
-//!   `$FLOE_LAB_DIR/checks/region.csv`, and EXPLAIN ANALYZE's `files_scanned` must equal
-//!   `$FLOE_LAB_DIR/checks/region_files_scanned.txt`. Uses the `floe serve` at `FLOE_LAB_ADDR`
-//!   when set (the lab workflow starts one), or starts Floe in-process and checks startup takes
-//!   under a second.
-//! - `FLOE_AWS=1`: the same query against the AWS Glue copy must equal
-//!   `$FLOE_LAB_DIR/checks/athena_region.csv`.
+//! - `ICEBLINK_LAB=1`: against iceblink-lab (Lakekeeper and MinIO). The region query must equal
+//!   `$ICEBLINK_LAB_DIR/checks/region.csv`, and EXPLAIN ANALYZE's `files_scanned` must equal
+//!   `$ICEBLINK_LAB_DIR/checks/region_files_scanned.txt`. Uses the `iceblink serve`
+//!   at `ICEBLINK_LAB_ADDR` when set (the lab workflow starts one), or starts Iceblink
+//!   in-process and checks startup takes under a second.
+//! - `ICEBLINK_AWS=1`: the same query against the AWS Glue copy must equal
+//!   `$ICEBLINK_LAB_DIR/checks/athena_region.csv`.
 //!
-//! `FLOE_LAB=1 FLOE_LAB_DIR=../floe-lab cargo nextest run -p floe-suites --test lab
+//! `ICEBLINK_LAB=1 ICEBLINK_LAB_DIR=../iceblink-lab cargo nextest run -p iceblink-suites --test lab
 //! --run-ignored ignored-only`
 
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-use floe::Deps;
-use floe_suites::{InProcess, SuiteError, compare, connect, parse};
+use iceblink::Deps;
+use iceblink_suites::{InProcess, SuiteError, compare, connect, parse};
 use tokio_postgres::{Client, SimpleQueryMessage};
 
 const REGION_QUERY: &str =
     "SELECT region, count(*), sum(amount) FROM sales.orders GROUP BY region ORDER BY region";
 
-/// floe-lab's services as its docker compose file publishes them.
+/// iceblink-lab's services as its docker compose file publishes them.
 const LAB_CONFIG: &str = r#"
 [server]
 pg_listen = "127.0.0.1:0"
@@ -46,9 +46,9 @@ fn enabled(variable: &str) -> bool {
 }
 
 fn lab_file(relative: &str) -> Result<String, SuiteError> {
-    let dir = std::env::var_os("FLOE_LAB_DIR")
+    let dir = std::env::var_os("ICEBLINK_LAB_DIR")
         .map(PathBuf::from)
-        .ok_or("set FLOE_LAB_DIR to a floe-lab checkout")?;
+        .ok_or("set ICEBLINK_LAB_DIR to an iceblink-lab checkout")?;
     let path = dir.join(relative);
     std::fs::read_to_string(&path).map_err(|error| format!("{}: {error}", path.display()).into())
 }
@@ -76,27 +76,27 @@ fn files_scanned(plan: &str) -> Option<usize> {
     digits.parse().ok()
 }
 
-/// Starts Floe in-process on `config_text`, timing startup as `floe serve` would.
+/// Starts Iceblink in-process on `config_text`, timing startup as `iceblink serve` would.
 async fn start(config_text: &str) -> Result<(InProcess, Duration), SuiteError> {
     let started = Instant::now();
-    let config = floe::parse_config(config_text, &|name| std::env::var(name).ok())?;
+    let config = iceblink::parse_config(config_text, &|name| std::env::var(name).ok())?;
     let deps = Deps::connect(&config).await?;
-    let floe = InProcess::start_with(config, deps).await?;
-    Ok((floe, started.elapsed()))
+    let server = InProcess::start_with(config, deps).await?;
+    Ok((server, started.elapsed()))
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[ignore = "needs floe-lab; run with FLOE_LAB=1 and FLOE_LAB_DIR"]
-async fn floe_lab_region_query_and_files_scanned_match_the_checks() -> Result<(), SuiteError> {
-    if !enabled("FLOE_LAB") {
+#[ignore = "needs iceblink-lab; run with ICEBLINK_LAB=1 and ICEBLINK_LAB_DIR"]
+async fn lab_region_query_and_files_scanned_match_the_checks() -> Result<(), SuiteError> {
+    if !enabled("ICEBLINK_LAB") {
         return Ok(());
     }
-    let (address, floe) = match std::env::var("FLOE_LAB_ADDR") {
+    let (address, server) = match std::env::var("ICEBLINK_LAB_ADDR") {
         Ok(address) => (address.parse::<SocketAddr>()?, None),
         Err(_) => {
-            let (floe, startup) = start(LAB_CONFIG).await?;
+            let (server, startup) = start(LAB_CONFIG).await?;
             assert!(startup < Duration::from_secs(1), "startup took {startup:?}");
-            (floe.address(), Some(floe))
+            (server.address(), Some(server))
         }
     };
     let client = connect(address).await?;
@@ -106,7 +106,7 @@ async fn floe_lab_region_query_and_files_scanned_match_the_checks() -> Result<()
     assert_eq!(
         expected.rows.len(),
         5,
-        "floe-lab's region check should have 5 regions"
+        "iceblink-lab's region check should have 5 regions"
     );
 
     let plan = rows(&client, &format!("EXPLAIN ANALYZE {REGION_QUERY}"))
@@ -119,22 +119,23 @@ async fn floe_lab_region_query_and_files_scanned_match_the_checks() -> Result<()
         .parse()?;
     assert_eq!(scanned, wanted, "files_scanned against pyiceberg's count");
 
-    if let Some(floe) = floe {
-        floe.stop().await?;
+    if let Some(server) = server {
+        server.stop().await?;
     }
     Ok(())
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[ignore = "needs AWS; run with FLOE_AWS=1, FLOE_AWS_ACCOUNT_ID, FLOE_AWS_PREFIX and FLOE_LAB_DIR"]
+#[ignore = "needs AWS; run with ICEBLINK_AWS=1, ICEBLINK_AWS_ACCOUNT_ID, ICEBLINK_AWS_PREFIX \
+            and ICEBLINK_LAB_DIR"]
 async fn aws_glue_region_query_matches_athena() -> Result<(), SuiteError> {
-    if !enabled("FLOE_AWS") {
+    if !enabled("ICEBLINK_AWS") {
         return Ok(());
     }
-    let account = std::env::var("FLOE_AWS_ACCOUNT_ID")?;
-    let prefix = std::env::var("FLOE_AWS_PREFIX")?;
-    let region = std::env::var("FLOE_AWS_REGION").unwrap_or_else(|_| "ap-south-1".to_owned());
-    let profile = std::env::var("FLOE_AWS_PROFILE")
+    let account = std::env::var("ICEBLINK_AWS_ACCOUNT_ID")?;
+    let prefix = std::env::var("ICEBLINK_AWS_PREFIX")?;
+    let region = std::env::var("ICEBLINK_AWS_REGION").unwrap_or_else(|_| "ap-south-1".to_owned());
+    let profile = std::env::var("ICEBLINK_AWS_PROFILE")
         .map(|profile| format!("profile = \"{profile}\""))
         .unwrap_or_default();
     let config = format!(
@@ -160,17 +161,17 @@ async fn aws_glue_region_query_matches_athena() -> Result<(), SuiteError> {
         allow_local_files = false
         "#
     );
-    let (floe, _) = start(&config).await?;
-    let client = floe.connect().await?;
+    let (server, _) = start(&config).await?;
+    let client = server.connect().await?;
     let expected = parse(&lab_file("checks/athena_region.csv")?, ',');
     compare(&rows(&client, REGION_QUERY).await?, &expected, true)?;
-    floe.stop().await?;
+    server.stop().await?;
     Ok(())
 }
 
 #[test]
 fn reads_files_scanned_from_a_plan() {
-    let plan = "FloeScanExec: sales.orders snapshot=7 files=3/90, metrics=[output_rows=10, \
+    let plan = "LakeScanExec: sales.orders snapshot=7 files=3/90, metrics=[output_rows=10, \
                 files_scanned=3, files_total=90]";
     assert_eq!(files_scanned(plan), Some(3));
     assert_eq!(files_scanned("ProjectionExec"), None);
