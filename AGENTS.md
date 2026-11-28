@@ -84,8 +84,8 @@
 - Small PRs: under 400 changed lines excluding tests and fixtures, where possible.
 - Conventional commits with DCO sign-off (git commit -s).
 - Before saying done, run the gate and paste the results:
-  cargo fmt --check; cargo clippy --all-targets --all-features -- -D warnings;
-  cargo nextest run; cargo deny check.
+  scripts/check-legacy-name.sh; cargo fmt --check;
+  cargo clippy --all-targets --all-features -- -D warnings; cargo nextest run; cargo deny check.
   Then list anything not done.
 - Check every external API against the docs for the exact version in Cargo.lock. Never invent an API.
   If reality differs from the prompt, stop and write docs/adr/NNNN-title.md with the options and a

@@ -41,8 +41,10 @@ Every change must pass the gate before review, and the pull request pastes its o
    scripts/gate.sh
    ```
 
-It runs, in order: `cargo fmt --check`, `cargo clippy --all-targets --all-features -- -D warnings`,
-`cargo nextest run --workspace` and `cargo deny check`, and stops at the first failure.
+It runs, in order: `scripts/check-legacy-name.sh` (no old project name outside the rename
+ADRs and CHANGELOG.md), `cargo fmt --check`,
+`cargo clippy --all-targets --all-features -- -D warnings`, `cargo nextest run --workspace` and
+`cargo deny check`, and stops at the first failure.
 
 ## End-to-end suites
 
