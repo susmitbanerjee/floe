@@ -3,6 +3,7 @@
 //! `main.rs` only.
 
 mod args;
+mod banner;
 mod failure;
 mod logging;
 pub(crate) mod output;
@@ -41,6 +42,7 @@ fn check(path: &Path) -> Result<(), Failure> {
 
 /// `iceblink serve`: config, catalog, listener, then serve until a signal, and drain.
 async fn serve(path: &Path) -> Result<(), Failure> {
+    output::banner();
     let config = load(path)?;
     tracing::info!(
         listen = %config.server.listen,

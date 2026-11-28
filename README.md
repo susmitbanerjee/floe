@@ -21,9 +21,11 @@ iceblink config check
 iceblink serve
 ```
 
-A successful start prints one line per step, then where to connect:
+A successful start prints the banner, one line per step, then where to connect. The banner
+is the word `iceblink` when stdout is not a terminal or NO_COLOR is set:
 
 ```
+iceblink
 ok     config    ./iceblink.toml
 ok     catalog   6 namespaces, 42 tables                   310ms
 ok     postgres  listening on 127.0.0.1:5432

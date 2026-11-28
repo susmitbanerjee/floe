@@ -2,11 +2,14 @@
 //!
 //! Phase 1 is plain text: a tag, a label column, then the detail. v0.1 styles the tags here
 //! without touching callers, and must stay plain when stdout isn't a terminal or NO_COLOR is
-//! set; the CLI tests check that no escape code ever appears. Startup lines go to stdout, failures
+//! set; the CLI tests check that no escape code ever appears. The serve banner is the one
+//! coloured line so far, under the same rule (ADR 0015). Startup lines go to stdout, failures
 //! to stderr.
 
-use std::io::{self, Write};
+use std::io::{self, IsTerminal, Write};
 use std::time::Duration;
+
+use super::banner::{self, Style};
 
 /// Wide enough for the longest tag, `ready`, and two spaces.
 const TAG_WIDTH: usize = 7;
@@ -14,6 +17,17 @@ const TAG_WIDTH: usize = 7;
 const LABEL_WIDTH: usize = 10;
 /// Where an elapsed time starts, so durations line up.
 const ELAPSED_COLUMN: usize = 57;
+
+/// The banner `iceblink serve` starts with: half blocks on a terminal, else the word.
+pub(crate) fn banner() {
+    let stdout = io::stdout();
+    let no_color = std::env::var_os("NO_COLOR");
+    let style = Style::detect(stdout.is_terminal(), no_color.as_deref());
+    let mut out = stdout.lock();
+    // Like emit: a closed stdout is not worth failing over.
+    let _ = out.write_all(banner::render(style).as_bytes());
+    let _ = out.flush();
+}
 
 /// A step that worked: `ok     catalog   6 namespaces, 42 tables          310ms`.
 pub(crate) fn ok(label: &str, detail: &str, elapsed: Option<Duration>) {

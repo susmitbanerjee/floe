@@ -135,6 +135,19 @@ fn a_missing_config_exits_78_and_suggests_the_example() -> TestResult {
 }
 
 #[test]
+fn serve_prints_the_plain_word_first_when_piped() -> TestResult {
+    let dir = TempDir::new()?;
+    let missing = dir.path().join("nope.toml");
+    let missing = missing.to_str().ok_or("path")?;
+    for no_color in [false, true] {
+        let output = cli(&["serve", "--config", missing], no_color)?;
+        assert_eq!(output.status.code(), Some(78));
+        assert_eq!(text(&output.stdout), "iceblink\n", "NO_COLOR {no_color}");
+    }
+    Ok(())
+}
+
+#[test]
 fn output_has_no_escape_codes_when_piped_or_under_no_color() -> TestResult {
     let (_dir, bad) = config_with(|text| text.replace("127.0.0.1:5432", "0.0.0.0:5432"))?;
     let example = example();
