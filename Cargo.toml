@@ -34,14 +34,14 @@ bytes = { version = "1", default-features = false }
 clap = { version = "4", default-features = false }
 # DataFusion 54 is the newest major all three families support; move them together, once a
 # quarter, in one PR. See docs/adr/0001-datafusion-version.md before changing any of these.
-datafusion = { version = "54", default-features = false }
-datafusion-postgres = { version = "0.18", default-features = false }
+datafusion = { version = "55", default-features = false }
+datafusion-postgres = { version = "0.19", default-features = false }
 futures = { version = "0.3", default-features = false }
 iceberg = { version = "0.11", default-features = false }
 iceberg-catalog-rest = { version = "0.11", default-features = false }
 iceberg-datafusion = { version = "0.11", default-features = false }
 # Only the Arrow major DataFusion 54 and iceberg 0.11 share (ADR 0001); the testkit writes with it.
-parquet = { version = "58", default-features = false }
+parquet = { version = "59", default-features = false }
 percent-encoding = { version = "2", default-features = false }
 # Must stay on the reqwest major that iceberg-catalog-rest uses: Iceblink hands it a
 # reqwest::Client.
