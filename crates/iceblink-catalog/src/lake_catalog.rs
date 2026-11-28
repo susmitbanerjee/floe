@@ -20,7 +20,7 @@ use crate::sigv4::{AwsSigV4Signer, SigV4Auth};
 use crate::storage::MetadataOnlyStorage;
 use crate::{CatalogError, CatalogSettings, NamespaceName, TableName};
 
-/// A connected Iceberg REST catalog that Floe can only read: list namespaces, list tables, and
+/// A connected Iceberg REST catalog that Iceblink can only read: list namespaces, list tables, and
 /// load a table's metadata. It has no method that creates, updates, renames or drops anything.
 pub struct LakeCatalog {
     inner: Arc<dyn Catalog>,
@@ -63,7 +63,7 @@ impl LakeCatalog {
             signed,
         };
         let rest = builder
-            .load("floe", properties(&settings))
+            .load("iceblink", properties(&settings))
             .await
             .map_err(|error| map_error(&error, &call, &context))?;
         let catalog = Self {
@@ -127,7 +127,7 @@ impl LakeCatalog {
     }
 
     /// Loads `table`'s current metadata. The returned table's file IO refuses every operation
-    /// until floe-scan attaches storage.
+    /// until iceblink-scan attaches storage.
     ///
     /// # Errors
     ///
@@ -171,7 +171,7 @@ impl LakeCatalog {
     }
 }
 
-/// The REST catalog's properties: the URI (without a trailing slash), the warehouse, and Floe's
+/// The REST catalog's properties: the URI (without a trailing slash), the warehouse, and Iceblink's
 /// user agent, which overrides the `iceberg-rs/…` one iceberg sets on every request.
 fn properties(settings: &CatalogSettings) -> HashMap<String, String> {
     let base = settings.uri.as_str().trim_end_matches('/').to_owned();

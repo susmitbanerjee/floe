@@ -41,7 +41,7 @@ impl FileRead for SpyRead {
 }
 
 #[async_trait]
-#[typetag::serde(name = "floe-test-spy")]
+#[typetag::serde(name = "iceblink-test-spy")]
 impl Storage for Spy {
     async fn exists(&self, _path: &str) -> iceberg::Result<bool> {
         self.touched();

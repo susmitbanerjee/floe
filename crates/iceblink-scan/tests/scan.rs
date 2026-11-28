@@ -1,4 +1,4 @@
-//! `FloeTableProvider` end to end on a 30-day `sales.orders` fixture: pruning, byte counts,
+//! `LakeTableProvider` end to end on a 30-day `sales.orders` fixture: pruning, byte counts,
 //! read-only, snapshot pinning, concurrent attribution and EXPLAIN ANALYZE.
 
 use std::any::Any;
@@ -8,9 +8,9 @@ use std::sync::Arc;
 use datafusion::arrow::util::pretty::pretty_format_batches;
 use datafusion::physical_plan::{ExecutionPlan, execute_stream};
 use datafusion::prelude::SessionContext;
-use floe_scan::{FloeScanExec, FloeTableProvider, IoCounts, StorageSettings};
-use floe_testkit::{Fixture, TableFixture};
 use futures::StreamExt;
+use iceblink_scan::{IoCounts, LakeScanExec, LakeTableProvider, StorageSettings};
+use iceblink_testkit::{Fixture, TableFixture};
 use url::Url;
 
 type TestResult = Result<(), Box<dyn Error>>;
@@ -46,16 +46,16 @@ fn settings(fixture: &Fixture) -> Result<StorageSettings, url::ParseError> {
 
 /// A session with the fixture's current table registered as `orders`.
 async fn session(fixture: &Fixture) -> Result<SessionContext, Box<dyn Error>> {
-    let provider = FloeTableProvider::new(fixture.load_table().await?, &settings(fixture)?)?;
+    let provider = LakeTableProvider::new(fixture.load_table().await?, &settings(fixture)?)?;
     let context = SessionContext::new();
     context.register_table("orders", Arc::new(provider))?;
     Ok(context)
 }
 
-/// The `FloeScanExec` somewhere in `plan`.
-fn find_scan(plan: &Arc<dyn ExecutionPlan>) -> Option<&FloeScanExec> {
+/// The `LakeScanExec` somewhere in `plan`.
+fn find_scan(plan: &Arc<dyn ExecutionPlan>) -> Option<&LakeScanExec> {
     let any: &dyn Any = plan.as_ref();
-    any.downcast_ref::<FloeScanExec>()
+    any.downcast_ref::<LakeScanExec>()
         .or_else(|| plan.children().into_iter().find_map(find_scan))
 }
 
@@ -84,7 +84,7 @@ async fn run(
 
 fn counts(plan: &Arc<dyn ExecutionPlan>) -> Result<IoCounts, Box<dyn Error>> {
     Ok(find_scan(plan)
-        .ok_or("no FloeScanExec in the plan")?
+        .ok_or("no LakeScanExec in the plan")?
         .io_counts())
 }
 
@@ -93,7 +93,7 @@ async fn the_last_week_prunes_files_and_counts_its_bytes() -> TestResult {
     let fixture = orders().await?;
     let context = session(&fixture).await?;
     let (rows, plan) = run(&context, LAST_7_DAYS).await?;
-    let scan = find_scan(&plan).ok_or("no FloeScanExec in the plan")?;
+    let scan = find_scan(&plan).ok_or("no LakeScanExec in the plan")?;
 
     assert_eq!(rows, 7 * 3 * 1_000);
     assert_eq!(scan.files_total(), Some(90));
@@ -175,7 +175,7 @@ async fn explain_analyze_shows_what_was_read() -> TestResult {
         .await?;
     let shown = pretty_format_batches(&batches)?.to_string();
     for expected in [
-        "FloeScanExec: sales.orders snapshot=",
+        "LakeScanExec: sales.orders snapshot=",
         "files=21/90",
         "files_scanned=21",
         "files_total=90",

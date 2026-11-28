@@ -4,7 +4,7 @@ use std::error::Error;
 
 use datafusion::error::DataFusionError;
 use datafusion::prelude::SessionContext;
-use floe_testkit::TableFixture;
+use iceblink_testkit::TableFixture;
 use url::Url;
 
 use super::*;
@@ -35,7 +35,7 @@ async fn a_table_outside_the_prefixes_fails_before_any_read() -> Result<(), Box<
         aws_profile: None,
     };
     let spy = Spy::default();
-    let provider = FloeTableProvider::with_inner_storage(
+    let provider = LakeTableProvider::with_inner_storage(
         fixture.load_table().await?,
         &settings,
         Arc::new(spy.clone()),

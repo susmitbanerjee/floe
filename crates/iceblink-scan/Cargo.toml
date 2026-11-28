@@ -1,6 +1,6 @@
 [package]
-name = "floe-scan"
-description = "Turns Iceberg tables into DataFusion scans for Floe and counts what they read."
+name = "iceblink-scan"
+description = "Turns Iceberg tables into DataFusion scans for Iceblink and counts what they read."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -15,7 +15,7 @@ aws-smithy-runtime-api.workspace = true
 bytes = { workspace = true, features = ["std"] }
 # parquet: read Iceberg data files. sql: plan SQL into DataFusion plans.
 datafusion = { workspace = true, features = ["parquet", "sql"] }
-floe-catalog.workspace = true
+iceblink-catalog.workspace = true
 futures = { workspace = true, features = ["std"] }
 iceberg.workspace = true
 iceberg-datafusion.workspace = true
@@ -31,7 +31,7 @@ url = { workspace = true, features = ["std"] }
 
 [dev-dependencies]
 datafusion-postgres.workspace = true
-floe-testkit.workspace = true
+iceblink-testkit.workspace = true
 iceberg-catalog-rest.workspace = true
 tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread"] }
 wiremock.workspace = true

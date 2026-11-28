@@ -5,8 +5,8 @@
 
 ## Context
 
-The catalog prompt asks floe-catalog to wrap iceberg-rust's REST client (0.11.0, pinned by
-ADR 0001) in a small read-only `LakeCatalog`, with Floe's own timeouts, retries, bearer auth and
+The catalog prompt asks iceblink-catalog to wrap iceberg-rust's REST client (0.11.0, pinned by
+ADR 0001) in a small read-only `LakeCatalog`, with Iceblink's own timeouts, retries, bearer auth and
 error variants. Reading the client's source showed where it differs from what the prompt
 assumed:
 
@@ -16,7 +16,7 @@ assumed:
    `iceberg::Error` offers only `kind()`, `message()`, `retryable()` and `source()`. Telling 401
    from 429 or 503 can't be done "by kind" alone.
 2. **`load_table` needs a `StorageFactory`** and refuses to run without one, because every
-   `Table` carries a FileIO. Storage belongs to floe-scan, and iceberg's `Storage` trait can write
+   `Table` carries a FileIO. Storage belongs to iceblink-scan, and iceberg's `Storage` trait can write
    and delete.
 3. **`load()` is lazy.** The `/v1/config` handshake runs on the first request, so a builder that
    loads fine can still have a wrong URI or token.
@@ -30,17 +30,17 @@ assumed:
 
 ## Options
 
-- For 1: (a) parse `status: NNN` out of the error's Display text; (b) write Floe's own REST
+- For 1: (a) parse `status: NNN` out of the error's Display text; (b) write Iceblink's own REST
   client; (c) wait for iceberg-rust to expose the context.
 - For 2: (a) a refusing, metadata-only `StorageFactory`; (b) iceberg's `MemoryStorageFactory`;
-  (c) wire S3 storage into floe-catalog now.
+  (c) wire S3 storage into iceblink-catalog now.
 - For TLS roots: (a) compiled-in webpki-roots; (b) the OS trust store through
   rustls-native-certs, which reads certificate files at runtime.
 
 ## Decision
 
 - **Timeouts on the client:** connect 5 s and total 30 s per HTTP request, set on the
-  `reqwest::Client` that Floe passes in. No `tokio::time::timeout` wrapper is needed. A
+  `reqwest::Client` that Iceblink passes in. No `tokio::time::timeout` wrapper is needed. A
   paginated listing makes several requests, each with its own 30 s.
 - **Statuses: option 1a.** `error::http_status` reads the status only when the kind and message
   match the client's unexpected-status error, and only ever uses the number, never the headers
@@ -48,11 +48,11 @@ assumed:
   against the real client, so a change in iceberg's Display fails the build.
 - **Storage: option 2a, chosen by the maintainer.** `MetadataOnlyStorage` fails in `build()`,
   and FileIO only calls `build()` on first use. So `load_table` returns metadata, and every read,
-  write or delete through the table's FileIO fails before touching anything. floe-scan will
+  write or delete through the table's FileIO fails before touching anything. iceblink-scan will
   attach read-only storage.
 - **`connect` probes** with one namespace listing, so misconfiguration fails at startup.
-- **User agent:** the `header.user-agent = floe/<version>` property overrides iceberg's.
-- **Auth:** a Floe `AuthManager` sends `catalog.credential` as `Authorization: Bearer …`, from a
+- **User agent:** the `header.user-agent = iceblink/<version>` property overrides iceberg's.
+- **Auth:** an Iceblink `AuthManager` sends `catalog.credential` as `Authorization: Bearer …`, from a
   `SecretString`, as a sensitive header value. It is never a plain iceberg property.
 - **TLS: option a, chosen by the maintainer.** reqwest 0.12 `rustls-tls` with ring and
   webpki-roots (licence exception in deny.toml). Private CAs aren't trusted; revisit if a
@@ -69,5 +69,5 @@ assumed:
   and the fix is in one function.
 - Ask upstream to expose the error context or status. When it does, drop the parse and
   supersede this ADR.
-- Until floe-scan attaches storage, a loaded table's FileIO refuses everything, by design.
+- Until iceblink-scan attaches storage, a loaded table's FileIO refuses everything, by design.
 - A dead catalog costs up to 3 × 30 s plus 0.6 s of backoff before a read gives up.

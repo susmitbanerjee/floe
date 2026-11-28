@@ -1,4 +1,4 @@
-# floe-scan
+# iceblink-scan
 
 Job: serve Iceberg tables to DataFusion as the `lake` catalog in a locked-down session, read
 their files from S3 (or local files in tests), and count what each scan read (snapshot, files,

@@ -1,5 +1,5 @@
-//! Storage for tables loaded by floe-catalog: none. iceberg-catalog-rest 0.11 won't load a table
-//! without a `StorageFactory`, but object storage belongs to floe-scan. This factory lets
+//! Storage for tables loaded by iceblink-catalog: none. iceberg-catalog-rest 0.11 won't load a
+//! table without a `StorageFactory`, but object storage belongs to iceblink-scan. This factory lets
 //! `load_table` return metadata while every read, write or delete through the table's FileIO
 //! fails before it touches anything.
 
@@ -13,12 +13,13 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub(crate) struct MetadataOnlyStorage;
 
-#[typetag::serde(name = "floe-metadata-only")]
+#[typetag::serde(name = "iceblink-metadata-only")]
 impl StorageFactory for MetadataOnlyStorage {
     fn build(&self, _config: &StorageConfig) -> iceberg::Result<Arc<dyn Storage>> {
         Err(iceberg::Error::new(
             ErrorKind::FeatureUnsupported,
-            "object storage is attached by floe-scan; floe-catalog loads table metadata only",
+            "object storage is attached by iceblink-scan; iceblink-catalog loads table metadata \
+             only",
         ))
     }
 }

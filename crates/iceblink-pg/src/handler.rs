@@ -1,4 +1,4 @@
-//! `FloeHandler`: datafusion-postgres's `DfSessionService`, wrapped.
+//! `PgHandler`: datafusion-postgres's `DfSessionService`, wrapped.
 //!
 //! The wrapper adds what a hook can't: holding a connection busy until its reply is flushed
 //! (for graceful shutdown), the deadline and tracking of extended-protocol rows, the read-only
@@ -36,22 +36,22 @@ use crate::statement::Statements;
 type Stored = <DfSessionService as ExtendedQueryHandler>::Statement;
 
 /// One connection's query handler.
-pub(crate) struct FloeHandler {
+pub(crate) struct PgHandler {
     inner: DfSessionService,
-    parser: Arc<FloeParser>,
+    parser: Arc<PgParser>,
     statements: Arc<Statements>,
     drain: Arc<Drain>,
     /// Held from an extended Execute until the Sync that ends it has been answered.
     busy: Mutex<Option<Busy>>,
 }
 
-impl FloeHandler {
+impl PgHandler {
     pub(crate) fn new(
         inner: DfSessionService,
         statements: Arc<Statements>,
         drain: Arc<Drain>,
     ) -> Self {
-        let parser = Arc::new(FloeParser {
+        let parser = Arc::new(PgParser {
             inner: inner.query_parser(),
         });
         Self {
@@ -76,7 +76,7 @@ impl FloeHandler {
 }
 
 /// For a parse error on SQL that starts with a changing verb, the read-only refusal instead.
-/// Other errors go on to `FloeErrorHandler`.
+/// Other errors go on to `PgErrorHandler`.
 fn unparsed(error: PgWireError, sql: &str) -> PgWireError {
     if let PgWireError::ApiError(inner) = &error
         && inner.downcast_ref::<ParserError>().is_some()
@@ -88,7 +88,7 @@ fn unparsed(error: PgWireError, sql: &str) -> PgWireError {
 }
 
 #[async_trait]
-impl SimpleQueryHandler for FloeHandler {
+impl SimpleQueryHandler for PgHandler {
     async fn on_query<C>(&self, client: &mut C, query: Query) -> PgWireResult<()>
     where
         C: ClientInfo + ClientPortalStore + Sink<PgWireBackendMessage> + Unpin + Send + Sync,
@@ -115,11 +115,11 @@ impl SimpleQueryHandler for FloeHandler {
 }
 
 #[async_trait]
-impl ExtendedQueryHandler for FloeHandler {
+impl ExtendedQueryHandler for PgHandler {
     type Statement = Stored;
-    type QueryParser = FloeParser;
+    type QueryParser = PgParser;
 
-    fn query_parser(&self) -> Arc<FloeParser> {
+    fn query_parser(&self) -> Arc<PgParser> {
         Arc::clone(&self.parser)
     }
 
@@ -182,12 +182,12 @@ impl ExtendedQueryHandler for FloeHandler {
 
 /// The library's extended-protocol parser, with the same read-only refusal for changing
 /// statements it can't parse.
-pub(crate) struct FloeParser {
+pub(crate) struct PgParser {
     inner: Arc<Parser>,
 }
 
 #[async_trait]
-impl QueryParser for FloeParser {
+impl QueryParser for PgParser {
     type Statement = Stored;
 
     async fn parse_sql<C>(

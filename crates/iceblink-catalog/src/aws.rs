@@ -1,5 +1,5 @@
 //! AWS credentials from the standard chain, cached until they near expiry. The catalog signs
-//! with them (SigV4, docs/adr/0005-sigv4.md) and floe-scan reads S3 with them
+//! with them (SigV4, docs/adr/0005-sigv4.md) and iceblink-scan reads S3 with them
 //! (docs/adr/0009-s3-reads.md).
 
 use std::fmt;

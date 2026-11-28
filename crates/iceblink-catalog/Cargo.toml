@@ -1,6 +1,6 @@
 [package]
-name = "floe-catalog"
-description = "Talks to Iceberg REST catalogs for Floe, read-only."
+name = "iceblink-catalog"
+description = "Talks to Iceberg REST catalogs for Iceblink, read-only."
 version.workspace = true
 edition.workspace = true
 license.workspace = true

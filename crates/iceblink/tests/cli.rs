@@ -1,4 +1,4 @@
-//! The `floe` binary as a shell sees it: output, exit codes, and fix lines. Catalogs are
+//! The `iceblink` binary as a shell sees it: output, exit codes, and fix lines. Catalogs are
 //! wiremock servers, so nothing leaves the machine.
 
 use std::error::Error;
@@ -15,20 +15,20 @@ type TestResult = Result<(), Box<dyn Error>>;
 
 /// The example config in the repository root.
 fn example() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../floe.example.toml")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../iceblink.example.toml")
 }
 
 /// The example config with `edit` applied, written to a temp dir.
 fn config_with(edit: impl Fn(String) -> String) -> Result<(TempDir, PathBuf), Box<dyn Error>> {
     let dir = TempDir::new()?;
-    let file = dir.path().join("floe.toml");
+    let file = dir.path().join("iceblink.toml");
     std::fs::write(&file, edit(std::fs::read_to_string(example())?))?;
     Ok((dir, file))
 }
 
-/// Runs `floe` with `args`, optionally with NO_COLOR set.
-fn floe(args: &[&str], no_color: bool) -> Result<Output, std::io::Error> {
-    let mut command = cargo_bin_cmd!("floe");
+/// Runs `iceblink` with `args`, optionally with NO_COLOR set.
+fn cli(args: &[&str], no_color: bool) -> Result<Output, std::io::Error> {
+    let mut command = cargo_bin_cmd!("iceblink");
     command.args(args).env_remove("RUST_LOG");
     if no_color {
         command.env("NO_COLOR", "1");
@@ -38,11 +38,11 @@ fn floe(args: &[&str], no_color: bool) -> Result<Output, std::io::Error> {
     command.output()
 }
 
-/// `floe` run off the async runtime, which keeps serving wiremock meanwhile.
-async fn floe_async(args: Vec<String>) -> Result<Output, Box<dyn Error>> {
+/// `iceblink` run off the async runtime, which keeps serving wiremock meanwhile.
+async fn cli_async(args: Vec<String>) -> Result<Output, Box<dyn Error>> {
     let output = tokio::task::spawn_blocking(move || {
         let args: Vec<&str> = args.iter().map(String::as_str).collect();
-        floe(&args, false)
+        cli(&args, false)
     })
     .await??;
     Ok(output)
@@ -54,18 +54,18 @@ fn text(bytes: &[u8]) -> String {
 
 #[test]
 fn prints_name_and_version_with_version_flag() -> TestResult {
-    let output = floe(&["--version"], false)?;
+    let output = cli(&["--version"], false)?;
     assert!(output.status.success(), "{}", output.status);
     assert_eq!(
         text(&output.stdout),
-        format!("floe {}\n", env!("CARGO_PKG_VERSION"))
+        format!("iceblink {}\n", env!("CARGO_PKG_VERSION"))
     );
     Ok(())
 }
 
 #[test]
 fn help_lists_every_exit_code() -> TestResult {
-    let output = floe(&["--help"], false)?;
+    let output = cli(&["--help"], false)?;
     assert!(output.status.success());
     let help = text(&output.stdout);
     for line in [
@@ -83,7 +83,7 @@ fn help_lists_every_exit_code() -> TestResult {
 
 #[test]
 fn bad_usage_exits_2() -> TestResult {
-    let output = floe(&["serve", "--no-such-flag"], false)?;
+    let output = cli(&["serve", "--no-such-flag"], false)?;
     assert_eq!(output.status.code(), Some(2));
     Ok(())
 }
@@ -92,12 +92,12 @@ fn bad_usage_exits_2() -> TestResult {
 fn config_check_accepts_the_example() -> TestResult {
     let example = example();
     let path = example.to_str().ok_or("non-UTF-8 path")?;
-    let output = floe(&["config", "check", "--config", path], false)?;
+    let output = cli(&["config", "check", "--config", path], false)?;
     assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
     let stdout = text(&output.stdout);
     assert!(stdout.starts_with("ok     config    "), "{stdout}");
     assert!(
-        stdout.contains(&format!("next   floe serve --config {path}")),
+        stdout.contains(&format!("next   iceblink serve --config {path}")),
         "{stdout}"
     );
     Ok(())
@@ -107,7 +107,7 @@ fn config_check_accepts_the_example() -> TestResult {
 fn a_non_loopback_listener_exits_78_with_the_loopback_fix() -> TestResult {
     let (_dir, file) = config_with(|text| text.replace("127.0.0.1:5432", "0.0.0.0:5432"))?;
     let file = file.to_str().ok_or("non-UTF-8 path")?;
-    let output = floe(&["config", "check", "--config", file], false)?;
+    let output = cli(&["config", "check", "--config", file], false)?;
     assert_eq!(output.status.code(), Some(78));
     let stderr = text(&output.stderr);
     assert!(
@@ -125,12 +125,12 @@ fn a_non_loopback_listener_exits_78_with_the_loopback_fix() -> TestResult {
 fn a_missing_config_exits_78_and_suggests_the_example() -> TestResult {
     let dir = TempDir::new()?;
     let missing = dir.path().join("nope.toml");
-    let output = floe(
+    let output = cli(
         &["serve", "--config", missing.to_str().ok_or("path")?],
         false,
     )?;
     assert_eq!(output.status.code(), Some(78));
-    assert!(text(&output.stderr).contains("floe.example.toml"));
+    assert!(text(&output.stderr).contains("iceblink.example.toml"));
     Ok(())
 }
 
@@ -151,7 +151,7 @@ fn output_has_no_escape_codes_when_piped_or_under_no_color() -> TestResult {
     ];
     for args in &runs {
         for no_color in [false, true] {
-            let output = floe(args, no_color)?;
+            let output = cli(args, no_color)?;
             let shown = format!("{}{}", text(&output.stdout), text(&output.stderr));
             assert!(
                 !shown.contains('\x1b'),
@@ -200,7 +200,7 @@ async fn a_port_in_use_exits_71_with_a_fix_naming_the_port() -> TestResult {
     let listen = taken.local_addr()?;
     let (_dir, file) = serve_config(&catalog.uri(), listen)?;
 
-    let output = floe_async(vec!["serve".into(), "--config".into(), file]).await?;
+    let output = cli_async(vec!["serve".into(), "--config".into(), file]).await?;
     assert_eq!(output.status.code(), Some(71), "{}", text(&output.stderr));
     let stdout = text(&output.stdout);
     assert!(
@@ -229,7 +229,7 @@ async fn an_unauthorised_catalog_exits_69_with_a_fix() -> TestResult {
         .await;
     let (_dir, file) = serve_config(&catalog.uri(), "127.0.0.1:0".parse()?)?;
 
-    let output = floe_async(vec!["serve".into(), "--config".into(), file]).await?;
+    let output = cli_async(vec!["serve".into(), "--config".into(), file]).await?;
     assert_eq!(output.status.code(), Some(69), "{}", text(&output.stderr));
     let stderr = text(&output.stderr);
     assert!(

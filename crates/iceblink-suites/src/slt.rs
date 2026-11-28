@@ -1,5 +1,5 @@
 //! sqllogictest over the Postgres wire: each statement goes through tokio-postgres's simple
-//! protocol to an in-process Floe, so the tests cover the protocol and Floe's own handling,
+//! protocol to an in-process Iceblink, so the tests cover the protocol and Iceblink's own handling,
 //! not just DataFusion.
 
 use std::net::SocketAddr;
@@ -12,12 +12,13 @@ use tokio_postgres::{Client, SimpleQueryMessage, SimpleQueryRow};
 use crate::server::{InProcess, SuiteError, connect};
 use crate::shop::shop;
 
-/// A statement's failure as the `.slt` files match it: `SQLSTATE 25006: Floe is read-only: …`.
+/// A statement's failure as the `.slt` files match it:
+/// `SQLSTATE 25006: Iceblink is read-only: …`.
 #[derive(Debug, thiserror::Error)]
 #[error("{0}")]
-pub struct FloeDbError(String);
+pub struct LakeDbError(String);
 
-impl From<tokio_postgres::Error> for FloeDbError {
+impl From<tokio_postgres::Error> for LakeDbError {
     fn from(error: tokio_postgres::Error) -> Self {
         Self(match error.as_db_error() {
             Some(database) => format!(
@@ -30,18 +31,18 @@ impl From<tokio_postgres::Error> for FloeDbError {
     }
 }
 
-/// One client connection to Floe.
-pub struct FloeDb {
+/// One client connection to Iceblink.
+pub struct LakeDb {
     client: Client,
 }
 
-impl FloeDb {
-    /// Connects to the Floe at `address`.
+impl LakeDb {
+    /// Connects to the Iceblink at `address`.
     ///
     /// # Errors
     ///
     /// The connection or startup failure.
-    pub async fn connect(address: SocketAddr) -> Result<Self, FloeDbError> {
+    pub async fn connect(address: SocketAddr) -> Result<Self, LakeDbError> {
         Ok(Self {
             client: connect(address).await?,
         })
@@ -49,11 +50,11 @@ impl FloeDb {
 }
 
 #[async_trait]
-impl AsyncDB for FloeDb {
-    type Error = FloeDbError;
+impl AsyncDB for LakeDb {
+    type Error = LakeDbError;
     type ColumnType = DefaultColumnType;
 
-    async fn run(&mut self, sql: &str) -> Result<DBOutput<DefaultColumnType>, FloeDbError> {
+    async fn run(&mut self, sql: &str) -> Result<DBOutput<DefaultColumnType>, LakeDbError> {
         let mut columns = None;
         let mut rows = Vec::new();
         let mut count = 0;
@@ -77,7 +78,7 @@ impl AsyncDB for FloeDb {
     async fn shutdown(&mut self) {}
 
     fn engine_name(&self) -> &str {
-        "floe"
+        "iceblink"
     }
 }
 
@@ -92,18 +93,18 @@ fn cells(row: &SimpleQueryRow) -> Vec<String> {
         .collect()
 }
 
-/// Runs one `.slt` file against a fresh Floe over the shop dataset.
+/// Runs one `.slt` file against a fresh Iceblink over the shop dataset.
 ///
 /// # Errors
 ///
 /// A failed setup, or the first record whose result differs, with the file and line.
 pub async fn run_file(path: &Path) -> Result<(), SuiteError> {
     let warehouse = shop().await?;
-    let floe = InProcess::start(warehouse.catalog(), &warehouse.warehouse_prefix()).await?;
-    let address = floe.address();
-    let mut runner = Runner::new(move || FloeDb::connect(address));
+    let server = InProcess::start(warehouse.catalog(), &warehouse.warehouse_prefix()).await?;
+    let address = server.address();
+    let mut runner = Runner::new(move || LakeDb::connect(address));
     let outcome = runner.run_file_async(path).await;
     runner.shutdown_async().await;
-    floe.stop().await?;
+    server.stop().await?;
     outcome.map_err(|error| format!("{}", error.display(false)).into())
 }

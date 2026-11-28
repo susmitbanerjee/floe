@@ -7,7 +7,7 @@ The prompt names this ADR 0003, which is taken (durations), so it is 0006.
 
 ## Context
 
-Floe's promise is that every answer shows what it read. In phase 1, EXPLAIN ANALYZE shows on the
+Iceblink's promise is that every answer shows what it read. In phase 1, EXPLAIN ANALYZE shows on the
 scan node:
 
 - the snapshot ID;
@@ -25,7 +25,7 @@ No scan may write. What the pinned iceberg 0.11 and iceberg-datafusion 0.11 offe
   and nothing read during planning (the manifest list and manifests).
 - **The integration's scan** (`IcebergTableScan`) plans files inside `execute()`, keeps no
   metrics, and has a crate-private constructor. So it can't report files scanned at plan time,
-  and it can't carry Floe's counters. Its filter conversion, `convert_filters_to_predicate`, is
+  and it can't carry Iceblink's counters. Its filter conversion, `convert_filters_to_predicate`, is
   public.
 - **iceberg's Parquet reader** prefetches 512 KiB to find a file's footer, then reads column
   chunks separately. In files smaller than that it reads the column bytes twice.
@@ -57,7 +57,7 @@ No scan may write. What the pinned iceberg 0.11 and iceberg-datafusion 0.11 offe
   - `write_attempts`: write, writer, delete, delete_prefix, delete_stream and new_output. They
     are counted and refused with `ScanError::ReadOnly` and never reach the inner storage. There
     is no rename to refuse.
-- **Scan: 2b.** `FloeTableProvider::scan`:
+- **Scan: 2b.** `LakeTableProvider::scan`:
   - pins `current_snapshot()` once;
   - checks the location guard;
   - builds the `TableScan` with `snapshot_id`, `select`, and `with_filter` from the integration's
@@ -65,11 +65,11 @@ No scan may write. What the pinned iceberg 0.11 and iceberg-datafusion 0.11 offe
     by DataFusion);
   - plans the files once, keeping the task list (metadata, not data).
 
-  `FloeScanExec` then streams those tasks through `ArrowReaderBuilder::read`, never collecting
+  `LakeScanExec` then streams those tasks through `ArrowReaderBuilder::read`, never collecting
   batches.
 - **Metrics.** `files_total` (the snapshot summary's `total-data-files`), `files_scanned`,
   `bytes_read`, `get_requests` and `output_rows`. The display line is
-  `FloeScanExec: <table> snapshot=<id> files=<scanned>/<total>`.
+  `LakeScanExec: <table> snapshot=<id> files=<scanned>/<total>`.
 - **Footer: 3b, maintainer's choice.** `with_metadata_size_hint(8)`: no byte is read twice, so
   `bytes_read` stays within the scanned files' sizes plus the manifests.
 - **Storage: 4a, maintainer's choice.** `s3://` tables get `ScanError::Io` until the object-store

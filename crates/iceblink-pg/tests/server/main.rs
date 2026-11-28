@@ -1,4 +1,4 @@
-//! Floe's Postgres server end to end: an in-process server on 127.0.0.1:0, the floe-testkit
+//! Iceblink's Postgres server end to end: an in-process server on 127.0.0.1:0, the iceblink-testkit
 //! `sales.orders` table, and tokio-postgres as the client.
 
 mod common;

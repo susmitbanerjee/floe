@@ -1,11 +1,11 @@
-//! The rules floe.toml must follow, and the conversion into each crate's settings. Secrets are
+//! The rules iceblink.toml must follow, and the conversion into each crate's settings. Secrets are
 //! resolved last, once everything else has passed.
 
 use std::time::Duration;
 
-use floe_catalog::{CatalogSettings, CatalogTimeouts, SigV4Service, SigV4Settings};
-use floe_pg::ServerSettings;
-use floe_scan::StorageSettings;
+use iceblink_catalog::{CatalogSettings, CatalogTimeouts, SigV4Service, SigV4Settings};
+use iceblink_pg::ServerSettings;
+use iceblink_scan::StorageSettings;
 use url::{Host, Url};
 
 use super::file::{CatalogTable, Config, ServerTable, SigV4Table, StorageTable};
@@ -133,7 +133,7 @@ fn catalog_settings(
     })
 }
 
-/// Rule 4: a service Floe can sign for, an AWS region name, and, if given, a non-blank profile.
+/// Rule 4: a service Iceblink can sign for, an AWS region name, and, if given, a non-blank profile.
 fn sigv4_settings(table: &SigV4Table) -> Result<SigV4Settings, ConfigError> {
     if table
         .profile
@@ -181,7 +181,7 @@ fn storage_settings(
         .collect::<Result<Vec<_>, _>>()?;
     if table.allow_local_files {
         tracing::warn!(
-            "storage.allow_local_files is true, so Floe may read file:// locations. \
+            "storage.allow_local_files is true, so Iceblink may read file:// locations. \
              Use it only for local tests."
         );
     }
@@ -227,8 +227,8 @@ fn http_url(key: &'static str, text: &str, allow_plain_http: bool) -> Result<Url
             });
         }
         tracing::warn!(
-            "{table}.allow_plain_http is true, so Floe reaches {key} over plain http on another \
-             host. Use it only on a private network you control."
+            "{table}.allow_plain_http is true, so Iceblink reaches {key} over plain http on \
+             another host. Use it only on a private network you control."
         );
     }
     Ok(url)
@@ -282,7 +282,7 @@ fn storage_prefix(prefix: &str, allow_local_files: bool) -> Result<Url, ConfigEr
         }
         if !path.starts_with('/') {
             return Err(invalid(
-                "must be an absolute path, such as file:///tmp/floe/",
+                "must be an absolute path, such as file:///tmp/iceblink/",
             ));
         }
     } else if let Some(rest) = prefix.strip_prefix("s3://") {

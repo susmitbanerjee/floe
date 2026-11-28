@@ -3,32 +3,32 @@
 
 use std::process::ExitCode;
 
-use floe_catalog::CatalogError;
+use iceblink_catalog::CatalogError;
 
 use super::output;
 use crate::app::AppError;
 use crate::config::ConfigError;
 
-/// The catalog couldn't be reached, or refused Floe (EX_UNAVAILABLE).
+/// The catalog couldn't be reached, or refused Iceblink (EX_UNAVAILABLE).
 pub(crate) const EXIT_CATALOG: u8 = 69;
-/// A bug in Floe (EX_SOFTWARE).
+/// A bug in Iceblink (EX_SOFTWARE).
 pub(crate) const EXIT_INTERNAL: u8 = 70;
 /// The Postgres listener couldn't bind (EX_OSERR).
 pub(crate) const EXIT_BIND: u8 = 71;
-/// floe.toml is missing or invalid (EX_CONFIG).
+/// iceblink.toml is missing or invalid (EX_CONFIG).
 pub(crate) const EXIT_CONFIG: u8 = 78;
 
-/// The exit-code table at the end of `floe --help`. clap itself exits 2 on bad usage.
+/// The exit-code table at the end of `iceblink --help`. clap itself exits 2 on bad usage.
 pub(crate) const EXIT_CODES_HELP: &str = "Exit codes:
   0   ok
   2   bad usage
   69  catalog unreachable or unauthorised
-  70  internal error (a bug in Floe)
+  70  internal error (a bug in Iceblink)
   71  cannot bind the Postgres listener
   78  config invalid";
 
-const REPORT_BUG: &str = "this is a bug in Floe: rerun with --log-level debug and report it with \
-                          the log";
+const REPORT_BUG: &str = "this is a bug in Iceblink: rerun with --log-level debug and report it \
+                          with the log";
 
 /// A failed command: what failed, why, the fix, and the exit code.
 #[derive(Debug)]
@@ -76,11 +76,11 @@ impl Failure {
         }
     }
 
-    /// Anything else: Floe couldn't do something it always should be able to.
+    /// Anything else: Iceblink couldn't do something it always should be able to.
     pub(crate) fn internal(error: &anyhow::Error) -> Self {
         Self {
             code: EXIT_INTERNAL,
-            label: "floe",
+            label: "iceblink",
             what: format!("{error:#}"),
             fix: REPORT_BUG.to_owned(),
         }

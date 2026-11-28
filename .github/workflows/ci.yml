@@ -54,7 +54,7 @@ jobs:
       # ubuntu-24.04 ships psql 16, matching tests/golden/psql/16: the psql suite must run here.
       - run: cargo nextest run --locked --workspace
         env:
-          FLOE_PSQL: "1"
+          ICEBLINK_PSQL: "1"
 
   coverage:
     # Report only: no threshold yet, and a failure here never fails the workflow.

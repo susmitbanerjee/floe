@@ -1,4 +1,4 @@
-//! Tests for floe.toml. The harness lives here: a valid document that each case edits, an
+//! Tests for iceblink.toml. The harness lives here: a valid document that each case edits, an
 //! injected environment, and `check`, which runs a table of cases for one rule.
 
 mod rules;
@@ -11,13 +11,13 @@ const SECRET: &str = "s3cr3t-token-value";
 /// The injected environment: one real secret, one empty variable, nothing else.
 fn environment(name: &str) -> Option<String> {
     match name {
-        "FLOE_CATALOG_TOKEN" => Some(SECRET.to_owned()),
-        "FLOE_EMPTY" => Some(String::new()),
+        "ICEBLINK_CATALOG_TOKEN" => Some(SECRET.to_owned()),
+        "ICEBLINK_EMPTY" => Some(String::new()),
         _ => None,
     }
 }
 
-/// A floe.toml written as raw TOML values, so a case can swap in any type. Defaults are valid.
+/// An iceblink.toml written as raw TOML values, so a case can swap in any type. Defaults are valid.
 #[derive(Clone, Copy)]
 struct Doc {
     pg_listen: &'static str,

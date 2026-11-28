@@ -10,7 +10,7 @@ use std::fmt::Write as _;
 use std::io::Write as _;
 use std::path::PathBuf;
 
-use floe_suites::{InProcess, SuiteError, compare, has_order_by, parse, tpch, workspace_root};
+use iceblink_suites::{InProcess, SuiteError, compare, has_order_by, parse, tpch, workspace_root};
 use tokio_postgres::{Client, SimpleQueryMessage};
 
 const SCALE_FACTOR: f64 = 0.01;
@@ -68,13 +68,13 @@ async fn check(client: &Client, name: &str) -> Result<(), String> {
 #[tokio::test(flavor = "multi_thread")]
 async fn tpch_sf001_answers_match_duckdb() -> Result<(), SuiteError> {
     let warehouse = tpch(SCALE_FACTOR).await?;
-    let floe = InProcess::start(warehouse.catalog(), &warehouse.warehouse_prefix()).await?;
+    let server = InProcess::start(warehouse.catalog(), &warehouse.warehouse_prefix()).await?;
     let known = known_failures()?;
 
     // Four connections, each taking every fourth query.
     let mut workers = tokio::task::JoinSet::new();
     for worker in 0..4 {
-        let client = floe.connect().await?;
+        let client = server.connect().await?;
         workers.spawn(async move {
             let mut outcomes = Vec::new();
             for number in (1..=22).skip(worker).step_by(4) {
@@ -90,7 +90,7 @@ async fn tpch_sf001_answers_match_duckdb() -> Result<(), SuiteError> {
         outcomes.extend(done?);
     }
     outcomes.sort_by(|left, right| left.0.cmp(&right.0));
-    floe.stop().await?;
+    server.stop().await?;
 
     let mut scorecard = String::new();
     let mut problems = Vec::new();

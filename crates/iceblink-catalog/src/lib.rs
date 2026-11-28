@@ -19,7 +19,7 @@ pub use error::CatalogError;
 /// The iceberg catalog interface, re-exported for [`LakeCatalog::from_catalog`].
 pub use iceberg::Catalog;
 /// A loaded Iceberg table: its metadata, and file IO that refuses every operation until
-/// floe-scan attaches storage.
+/// iceblink-scan attaches storage.
 pub use iceberg::table::Table;
 pub use lake_catalog::LakeCatalog;
 pub use names::{NamespaceName, TableName};

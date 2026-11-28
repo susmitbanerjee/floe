@@ -92,7 +92,7 @@ impl CountingStorage {
 }
 
 #[async_trait]
-#[typetag::serde(name = "floe-counting")]
+#[typetag::serde(name = "iceblink-counting")]
 impl Storage for CountingStorage {
     async fn exists(&self, path: &str) -> iceberg::Result<bool> {
         self.check(path)?;
@@ -173,7 +173,7 @@ struct CountingStorageFactory {
     storage: CountingStorage,
 }
 
-#[typetag::serde(name = "floe-counting-factory")]
+#[typetag::serde(name = "iceblink-counting-factory")]
 impl StorageFactory for CountingStorageFactory {
     fn build(&self, _config: &StorageConfig) -> iceberg::Result<Arc<dyn Storage>> {
         Ok(Arc::new(self.storage.clone()))

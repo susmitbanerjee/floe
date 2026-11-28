@@ -6,8 +6,8 @@ use std::time::Duration;
 use datafusion::arrow::array::AsArray;
 use datafusion::arrow::datatypes::{Decimal128Type, Int64Type};
 use datafusion::arrow::util::display::array_value_to_string;
-use floe_pg::ShutdownSummary;
 use futures::{StreamExt, pin_mut};
+use iceblink_pg::ShutdownSummary;
 use tokio_postgres::types::Type;
 
 use crate::common::{TestResult, TestServer, failure, files_under, orders, rows};
@@ -135,7 +135,7 @@ async fn refuses_changing_statements_naming_them() -> TestResult {
         ("DROP TABLE orders".to_owned(), "DROP TABLE"),
     ];
     for (sql, kind) in &refused {
-        let expected = format!("Floe is read-only: {kind} is not allowed.");
+        let expected = format!("Iceblink is read-only: {kind} is not allowed.");
         let simple = failure(client.batch_execute(sql).await)?;
         assert_eq!(simple, ("25006".to_owned(), expected.clone()), "{sql}");
         let extended = failure(client.execute(sql.as_str(), &[]).await)?;

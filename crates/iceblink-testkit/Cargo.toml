@@ -1,6 +1,6 @@
 [package]
-name = "floe-testkit"
-description = "Test fixtures for Floe: real, deterministic Iceberg tables in a temp dir."
+name = "iceblink-testkit"
+description = "Test fixtures for Iceblink: real, deterministic Iceberg tables in a temp dir."
 version.workspace = true
 edition.workspace = true
 license.workspace = true

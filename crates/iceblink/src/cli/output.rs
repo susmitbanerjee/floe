@@ -1,4 +1,4 @@
-//! Everything `floe` prints for people, and the only module allowed to print.
+//! Everything `iceblink` prints for people, and the only module allowed to print.
 //!
 //! Phase 1 is plain text: a tag, a label column, then the detail. v0.1 styles the tags here
 //! without touching callers, and must stay plain when stdout isn't a terminal or NO_COLOR is
@@ -30,7 +30,7 @@ pub(crate) fn ready(url: &str) {
     emit(&mut io::stdout().lock(), &tagged("ready", url));
 }
 
-/// The command to run next: `next   psql -h 127.0.0.1 -U floe lake`.
+/// The command to run next: `next   psql -h 127.0.0.1 -U iceblink lake`.
 pub(crate) fn next(command: &str) {
     emit(&mut io::stdout().lock(), &tagged("next", command));
 }
@@ -55,7 +55,7 @@ fn tagged(tag: &str, text: &str) -> String {
     format!("{tag:<TAG_WIDTH$}{text}")
 }
 
-/// Writes one line. A closed stdout or stderr (such as `floe … | head`) is not worth failing
+/// Writes one line. A closed stdout or stderr (such as `iceblink … | head`) is not worth failing
 /// the command over, so write errors are dropped.
 fn emit(out: &mut impl Write, text: &str) {
     let _ = writeln!(out, "{text}");
@@ -69,8 +69,8 @@ mod tests {
     #[test]
     fn lines_have_a_tag_a_label_column_and_the_detail() {
         assert_eq!(
-            ok_line("config", "./floe.toml", None),
-            "ok     config    ./floe.toml"
+            ok_line("config", "./iceblink.toml", None),
+            "ok     config    ./iceblink.toml"
         );
         assert_eq!(
             ok_line(
@@ -85,8 +85,8 @@ mod tests {
             "ready  postgres://127.0.0.1:5432/lake"
         );
         assert_eq!(
-            tagged("next", "psql -h 127.0.0.1 -U floe lake"),
-            "next   psql -h 127.0.0.1 -U floe lake"
+            tagged("next", "psql -h 127.0.0.1 -U iceblink lake"),
+            "next   psql -h 127.0.0.1 -U iceblink lake"
         );
     }
 

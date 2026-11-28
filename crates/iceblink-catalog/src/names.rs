@@ -18,7 +18,7 @@ const PATH_SEGMENT: &AsciiSet = &NON_ALPHANUMERIC
     .remove(b'~');
 
 /// iceberg-catalog-rest 0.11 joins names into request paths raw, so a `%`, `/`, `?` or `#` in a
-/// name would corrupt the URL. Floe encodes each name itself before handing it over.
+/// name would corrupt the URL. Iceblink encodes each name itself before handing it over.
 fn path_segment(name: &str) -> String {
     utf8_percent_encode(name, PATH_SEGMENT).to_string()
 }
@@ -55,7 +55,7 @@ impl NamespaceName {
     }
 
     /// Reads a namespace the catalog returned. Nested namespaces are refused as unsupported;
-    /// a name Floe would refuse from a caller is a protocol error.
+    /// a name Iceblink would refuse from a caller is a protocol error.
     pub(crate) fn from_ident(ident: &NamespaceIdent) -> Result<Self, CatalogError> {
         match ident.as_ref().as_slice() {
             [single] => Self::new(single.clone()).map_err(from_catalog),
@@ -140,11 +140,11 @@ fn check(kind: &str, name: &str) -> Result<(), CatalogError> {
     Err(CatalogError::InvalidName { reason })
 }
 
-/// A name that fails Floe's checks but came from the catalog is the catalog's fault.
+/// A name that fails Iceblink's checks but came from the catalog is the catalog's fault.
 fn from_catalog(error: CatalogError) -> CatalogError {
     match error {
         CatalogError::InvalidName { reason } => CatalogError::Protocol {
-            message: format!("the catalog returned a name Floe can't use: {reason}"),
+            message: format!("the catalog returned a name Iceblink can't use: {reason}"),
         },
         other => other,
     }

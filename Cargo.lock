@@ -2543,133 +2543,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "floe"
-version = "0.1.0-dev"
-dependencies = [
- "anyhow",
- "assert_cmd",
- "clap",
- "floe-catalog",
- "floe-pg",
- "floe-scan",
- "floe-testkit",
- "futures",
- "secrecy",
- "serde",
- "tempfile",
- "thiserror",
- "tokio",
- "tokio-postgres",
- "tokio-util",
- "toml",
- "tracing",
- "tracing-subscriber",
- "url",
- "wiremock",
-]
-
-[[package]]
-name = "floe-catalog"
-version = "0.1.0-dev"
-dependencies = [
- "async-trait",
- "aws-config",
- "aws-credential-types",
- "aws-sigv4",
- "aws-smithy-http-client",
- "aws-smithy-runtime-api",
- "iceberg",
- "iceberg-catalog-rest",
- "percent-encoding",
- "reqwest",
- "secrecy",
- "serde",
- "thiserror",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "typetag",
- "url",
- "wiremock",
-]
-
-[[package]]
-name = "floe-pg"
-version = "0.1.0-dev"
-dependencies = [
- "async-trait",
- "datafusion",
- "datafusion-postgres",
- "floe-catalog",
- "floe-scan",
- "floe-testkit",
- "futures",
- "thiserror",
- "tokio",
- "tokio-postgres",
- "tokio-util",
- "tracing",
- "tracing-subscriber",
- "url",
-]
-
-[[package]]
-name = "floe-scan"
-version = "0.1.0-dev"
-dependencies = [
- "async-trait",
- "aws-credential-types",
- "aws-sigv4",
- "aws-smithy-runtime-api",
- "bytes",
- "datafusion",
- "datafusion-postgres",
- "floe-catalog",
- "floe-testkit",
- "futures",
- "iceberg",
- "iceberg-catalog-rest",
- "iceberg-datafusion",
- "percent-encoding",
- "reqwest",
- "serde",
- "thiserror",
- "tokio",
- "typetag",
- "url",
- "wiremock",
-]
-
-[[package]]
-name = "floe-suites"
-version = "0.1.0-dev"
-dependencies = [
- "async-trait",
- "datafusion",
- "floe",
- "floe-catalog",
- "floe-testkit",
- "iceberg",
- "sqllogictest",
- "thiserror",
- "tokio",
- "tokio-postgres",
- "tokio-util",
- "tpchgen",
-]
-
-[[package]]
-name = "floe-testkit"
-version = "0.1.0-dev"
-dependencies = [
- "datafusion",
- "iceberg",
- "parquet",
- "tempfile",
- "tokio",
-]
-
-[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3225,6 +3098,133 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "iceblink"
+version = "0.1.0-dev"
+dependencies = [
+ "anyhow",
+ "assert_cmd",
+ "clap",
+ "futures",
+ "iceblink-catalog",
+ "iceblink-pg",
+ "iceblink-scan",
+ "iceblink-testkit",
+ "secrecy",
+ "serde",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "tokio-postgres",
+ "tokio-util",
+ "toml",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "wiremock",
+]
+
+[[package]]
+name = "iceblink-catalog"
+version = "0.1.0-dev"
+dependencies = [
+ "async-trait",
+ "aws-config",
+ "aws-credential-types",
+ "aws-sigv4",
+ "aws-smithy-http-client",
+ "aws-smithy-runtime-api",
+ "iceberg",
+ "iceberg-catalog-rest",
+ "percent-encoding",
+ "reqwest",
+ "secrecy",
+ "serde",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "typetag",
+ "url",
+ "wiremock",
+]
+
+[[package]]
+name = "iceblink-pg"
+version = "0.1.0-dev"
+dependencies = [
+ "async-trait",
+ "datafusion",
+ "datafusion-postgres",
+ "futures",
+ "iceblink-catalog",
+ "iceblink-scan",
+ "iceblink-testkit",
+ "thiserror",
+ "tokio",
+ "tokio-postgres",
+ "tokio-util",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+]
+
+[[package]]
+name = "iceblink-scan"
+version = "0.1.0-dev"
+dependencies = [
+ "async-trait",
+ "aws-credential-types",
+ "aws-sigv4",
+ "aws-smithy-runtime-api",
+ "bytes",
+ "datafusion",
+ "datafusion-postgres",
+ "futures",
+ "iceberg",
+ "iceberg-catalog-rest",
+ "iceberg-datafusion",
+ "iceblink-catalog",
+ "iceblink-testkit",
+ "percent-encoding",
+ "reqwest",
+ "serde",
+ "thiserror",
+ "tokio",
+ "typetag",
+ "url",
+ "wiremock",
+]
+
+[[package]]
+name = "iceblink-suites"
+version = "0.1.0-dev"
+dependencies = [
+ "async-trait",
+ "datafusion",
+ "iceberg",
+ "iceblink",
+ "iceblink-catalog",
+ "iceblink-testkit",
+ "sqllogictest",
+ "thiserror",
+ "tokio",
+ "tokio-postgres",
+ "tokio-util",
+ "tpchgen",
+]
+
+[[package]]
+name = "iceblink-testkit"
+version = "0.1.0-dev"
+dependencies = [
+ "datafusion",
+ "iceberg",
+ "parquet",
+ "tempfile",
+ "tokio",
 ]
 
 [[package]]

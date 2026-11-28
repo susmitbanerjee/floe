@@ -1,4 +1,4 @@
-//! The location guard: Floe reads only under `storage.allowed_prefixes`.
+//! The location guard: Iceblink reads only under `storage.allowed_prefixes`.
 
 use serde::{Deserialize, Serialize};
 

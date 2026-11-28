@@ -25,7 +25,7 @@ pub enum CatalogError {
         operation: &'static str,
     },
     /// The catalog answered 401 or 403.
-    #[error("HTTP {status} from {uri}: the catalog refused Floe's request")]
+    #[error("HTTP {status} from {uri}: the catalog refused Iceblink's request")]
     Unauthorized {
         /// 401 or 403.
         status: u16,
@@ -35,7 +35,7 @@ pub enum CatalogError {
         hint: &'static str,
     },
     /// No source in the AWS credential chain produced credentials.
-    #[error("Floe found no AWS credentials in the standard chain")]
+    #[error("Iceblink found no AWS credentials in the standard chain")]
     NoAwsCredentials,
     /// The namespace or table doesn't exist.
     #[error("{what} does not exist in the catalog")]
@@ -43,19 +43,19 @@ pub enum CatalogError {
         /// What was missing, such as `table sales.orders`.
         what: String,
     },
-    /// The catalog asked for something Floe doesn't support yet.
+    /// The catalog asked for something Iceblink doesn't support yet.
     #[error("{feature} is not supported yet")]
     Unsupported {
         /// What isn't supported, such as `multi-level namespace sales.eu`.
         feature: String,
     },
-    /// Any other answer Floe didn't expect, with the credential stripped.
+    /// Any other answer Iceblink didn't expect, with the credential stripped.
     #[error("the catalog gave an unexpected answer: {message}")]
     Protocol {
         /// What the catalog said: the HTTP status and iceberg's summary, never the body.
         message: String,
     },
-    /// A caller built a namespace or table name Floe can't use.
+    /// A caller built a namespace or table name Iceblink can't use.
     #[error("invalid name: {reason}")]
     InvalidName {
         /// What is wrong with the name. The name itself isn't repeated.
@@ -68,7 +68,7 @@ impl CatalogError {
     pub fn fix(&self) -> String {
         match self {
             Self::Unreachable { .. } => {
-                "check catalog.uri in floe.toml and that the catalog is running".to_owned()
+                "check catalog.uri in iceblink.toml and that the catalog is running".to_owned()
             }
             Self::Timeout { .. } => {
                 "check the catalog's health and the network path to it".to_owned()
@@ -77,7 +77,7 @@ impl CatalogError {
             Self::NoAwsCredentials => NO_AWS_CREDENTIALS.to_owned(),
             Self::NotFound { .. } => "check the name and catalog.warehouse".to_owned(),
             Self::Unsupported { .. } => {
-                "Floe reads single-level namespaces from Iceberg REST catalogs; open an issue \
+                "Iceblink reads single-level namespaces from Iceberg REST catalogs; open an issue \
                  if you need more"
                     .to_owned()
             }
@@ -98,7 +98,7 @@ const CHECK_CREDENTIAL: &str = "check catalog.credential: the token in its envir
 const SET_CREDENTIAL: &str = "this catalog needs a token: set catalog.credential = \
                               \"env:NAME\" and put the token in the variable NAME";
 
-const CHECK_AWS_IDENTITY: &str = "check the AWS identity Floe signed with (AWS_PROFILE, SSO \
+const CHECK_AWS_IDENTITY: &str = "check the AWS identity Iceblink signed with (AWS_PROFILE, SSO \
                                   login, or the instance or pod role), that catalog.sigv4.region \
                                   matches the endpoint, and that its policy allows the read \
                                   actions in docs/aws-permissions.md";
@@ -289,7 +289,7 @@ mod tests {
         assert_eq!(
             mapped.to_string(),
             "HTTP 403 from https://glue.ap-south-1.amazonaws.com/iceberg: the catalog refused \
-             Floe's request"
+             Iceblink's request"
         );
         let fix = mapped.fix();
         assert!(fix.contains("docs/aws-permissions.md"), "{fix}");

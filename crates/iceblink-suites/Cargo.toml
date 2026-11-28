@@ -1,6 +1,6 @@
 [package]
-name = "floe-suites"
-description = "End-to-end suites for Floe: SQL logic, TPC-H and psql, through the Postgres wire."
+name = "iceblink-suites"
+description = "End-to-end suites for Iceblink: SQL logic, TPC-H and psql, through the Postgres wire."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -29,9 +29,9 @@ path = "../../tests/lab.rs"
 async-trait.workspace = true
 # For its `arrow` re-export (ADR 0001: Arrow comes through DataFusion).
 datafusion.workspace = true
-floe.workspace = true
-floe-catalog.workspace = true
-floe-testkit.workspace = true
+iceblink.workspace = true
+iceblink-catalog.workspace = true
+iceblink-testkit.workspace = true
 iceberg.workspace = true
 sqllogictest.workspace = true
 thiserror.workspace = true

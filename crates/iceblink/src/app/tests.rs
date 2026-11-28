@@ -1,11 +1,11 @@
-//! Startup and shutdown with a floe-testkit catalog: a real listener on 127.0.0.1:0, a real
+//! Startup and shutdown with an iceblink-testkit catalog: a real listener on 127.0.0.1:0, a real
 //! Postgres client, and a query in flight when the token is cancelled.
 
 use std::error::Error;
 use std::net::{Ipv4Addr, SocketAddr, TcpListener as StdListener};
 
-use floe_testkit::{Fixture, TableFixture};
 use futures::{StreamExt, pin_mut};
+use iceblink_testkit::{Fixture, TableFixture};
 use tokio_postgres::NoTls;
 
 use super::*;
@@ -23,7 +23,7 @@ async fn orders() -> Result<Fixture, Box<dyn Error>> {
         .await?)
 }
 
-/// A floe.toml for `fixture`, listening on `pg_listen`.
+/// An iceblink.toml for `fixture`, listening on `pg_listen`.
 fn config(fixture: &Fixture, pg_listen: &str) -> Result<ValidConfig, Box<dyn Error>> {
     let text = format!(
         r#"
@@ -64,7 +64,7 @@ async fn a_query_in_flight_at_shutdown_is_drained() -> TestResult {
     let (client, connection) = tokio_postgres::Config::new()
         .host("127.0.0.1")
         .port(address.port())
-        .user("floe")
+        .user("iceblink")
         .dbname("lake")
         .connect(NoTls)
         .await?;
@@ -108,7 +108,7 @@ async fn a_port_in_use_fails_with_exit_71_and_names_the_port() -> TestResult {
     let config = config(&fixture, &format!("127.0.0.1:{port}"))?;
 
     let Err(error) = start(config, deps(&fixture)).await else {
-        return Err("Floe started on a port that was already in use".into());
+        return Err("Iceblink started on a port that was already in use".into());
     };
     assert!(matches!(error, AppError::Bind { .. }), "{error:?}");
     let failure = Failure::app(&error);
@@ -133,15 +133,15 @@ fn the_catalog_line_counts_namespaces_and_tables() {
 fn psql_gets_a_port_only_when_it_isnt_5432() -> Result<(), std::net::AddrParseError> {
     assert_eq!(
         psql_command("127.0.0.1:5432".parse()?),
-        "psql -h 127.0.0.1 -U floe lake"
+        "psql -h 127.0.0.1 -U iceblink lake"
     );
     assert_eq!(
         psql_command("127.0.0.1:6543".parse()?),
-        "psql -h 127.0.0.1 -p 6543 -U floe lake"
+        "psql -h 127.0.0.1 -p 6543 -U iceblink lake"
     );
     assert_eq!(
         psql_command("[::1]:5432".parse()?),
-        "psql -h ::1 -U floe lake"
+        "psql -h ::1 -U iceblink lake"
     );
     Ok(())
 }

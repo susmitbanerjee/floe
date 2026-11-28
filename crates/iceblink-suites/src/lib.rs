@@ -1,5 +1,5 @@
-//! Support for Floe's end-to-end suites, which live in the workspace root's `tests/`: an
-//! in-process Floe, the SQL logic tests' dataset and runner, TPC-H data, and answer
+//! Support for Iceblink's end-to-end suites, which live in the workspace root's `tests/`: an
+//! in-process Iceblink, the SQL logic tests' dataset and runner, TPC-H data, and answer
 //! comparison (docs/adr/0011-end-to-end-suites.md).
 
 mod compare;
@@ -11,7 +11,7 @@ mod tpch;
 pub use compare::{Expected, cell_matches, compare, has_order_by, parse};
 pub use server::{InProcess, SuiteError, connect};
 pub use shop::{days, micros, shop};
-pub use slt::{FloeDb, FloeDbError, run_file};
+pub use slt::{LakeDb, LakeDbError, run_file};
 pub use tpch::tpch;
 
 /// The workspace root, where `tests/` lives.

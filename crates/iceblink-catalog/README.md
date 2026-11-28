@@ -1,4 +1,4 @@
-# floe-catalog
+# iceblink-catalog
 
 Job: talk to Apache Iceberg REST catalogs (namespaces, tables, snapshots).
 

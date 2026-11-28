@@ -32,7 +32,10 @@ impl Signals {
             interrupted = tokio::signal::ctrl_c() => match interrupted {
                 Ok(()) => Some("SIGINT"),
                 Err(error) => {
-                    tracing::warn!(%error, "couldn't listen for Ctrl-C; use SIGTERM to stop Floe");
+                    tracing::warn!(
+                        %error,
+                        "couldn't listen for Ctrl-C; use SIGTERM to stop Iceblink"
+                    );
                     None
                 }
             },

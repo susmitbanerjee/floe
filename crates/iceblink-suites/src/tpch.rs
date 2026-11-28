@@ -2,7 +2,7 @@
 //! tables in namespace `tpch`. Column types follow DuckDB's TPC-H schema, which the expected
 //! answers came from: keys as bigint, money and quantity as decimal(15,2), dates as date.
 //!
-//! tpchgen-arrow targets other Arrow majors than Floe's 58, so the batches are built here.
+//! tpchgen-arrow targets other Arrow majors than Iceblink's 58, so the batches are built here.
 
 use std::sync::Arc;
 
@@ -11,7 +11,7 @@ use datafusion::arrow::array::{
 };
 use datafusion::arrow::datatypes::{DataType, Field, Schema};
 use datafusion::arrow::error::ArrowError;
-use floe_testkit::Warehouse;
+use iceblink_testkit::Warehouse;
 use tpchgen::generators::{
     CustomerGenerator, LineItemGenerator, NationGenerator, OrderGenerator, PartGenerator,
     PartSuppGenerator, RegionGenerator, SupplierGenerator,

@@ -1,7 +1,7 @@
-//! Loads floe.toml, Floe's only config file: read it, parse it, check every rule, resolve
+//! Loads iceblink.toml, Iceblink's only config file: read it, parse it, check every rule, resolve
 //! `env:NAME` secrets, and hand each library crate its own settings.
 //!
-//! Phase 1 has no authentication, so these rules are what keep Floe on the local machine.
+//! Phase 1 has no authentication, so these rules are what keep Iceblink on the local machine.
 
 mod file;
 mod secret;
@@ -15,50 +15,50 @@ use std::io::{self, Read};
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 
-use floe_catalog::CatalogSettings;
-use floe_pg::ServerSettings;
-use floe_scan::StorageSettings;
+use iceblink_catalog::CatalogSettings;
+use iceblink_pg::ServerSettings;
+use iceblink_scan::StorageSettings;
 
 pub(crate) use file::Config;
 
-/// Where Floe looks for its config unless `--config` names another file.
-pub(crate) const DEFAULT_CONFIG_PATH: &str = "./floe.toml";
+/// Where Iceblink looks for its config unless `--config` names another file.
+pub(crate) const DEFAULT_CONFIG_PATH: &str = "./iceblink.toml";
 
-/// floe.toml is a few hundred bytes. Anything over 64 KiB is the wrong file.
+/// iceblink.toml is a few hundred bytes. Anything over 64 KiB is the wrong file.
 pub(crate) const MAX_CONFIG_BYTES: u64 = 64 * 1024;
 
-/// A floe.toml that passed every rule, split into the settings each crate needs.
+/// An iceblink.toml that passed every rule, split into the settings each crate needs.
 #[derive(Debug)]
 pub struct ValidConfig {
-    /// The Postgres listener, for floe-pg.
+    /// The Postgres listener, for iceblink-pg.
     pub(crate) server: ServerSettings,
-    /// The Iceberg REST catalog, for floe-catalog. Holds the resolved credential, if any.
+    /// The Iceberg REST catalog, for iceblink-catalog. Holds the resolved credential, if any.
     pub(crate) catalog: CatalogSettings,
-    /// Table storage and the locations Floe may read, for floe-scan.
+    /// Table storage and the locations Iceblink may read, for iceblink-scan.
     pub(crate) storage: StorageSettings,
 }
 
-/// Why floe.toml was refused. Display says what is wrong and why; [`fix`](ConfigError::fix) says
-/// what to write instead. Neither contains a secret's value.
+/// Why iceblink.toml was refused. Display says what is wrong and why;
+/// [`fix`](ConfigError::fix) says what to write instead. Neither contains a secret's value.
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum ConfigError {
     /// The file couldn't be opened or read, or isn't UTF-8.
     #[error("could not read {}: {source}", .path.display())]
     Read {
-        /// The file Floe tried to read.
+        /// The file Iceblink tried to read.
         path: PathBuf,
         /// What the operating system reported.
         source: io::Error,
     },
     /// The file is over 64 KiB.
-    #[error("{} is larger than 64 KiB, far more than floe.toml needs", .path.display())]
+    #[error("{} is larger than 64 KiB, far more than iceblink.toml needs", .path.display())]
     TooLarge {
-        /// The file Floe tried to read.
+        /// The file Iceblink tried to read.
         path: PathBuf,
     },
     /// The TOML didn't parse, a value had the wrong type, or a key is unknown (rule 7).
-    #[error("floe.toml line {line}, column {column}: {message}")]
+    #[error("iceblink.toml line {line}, column {column}: {message}")]
     Parse {
         /// 1-based line of the problem.
         line: usize,
@@ -69,7 +69,7 @@ pub enum ConfigError {
     },
     /// Rule 1: `pg_listen` isn't a loopback address.
     #[error(
-        "pg_listen is {listen}, but this build has no authentication, so Floe only listens on \
+        "pg_listen is {listen}, but this build has no authentication, so Iceblink only listens on \
          loopback"
     )]
     NotLoopback {
@@ -88,7 +88,7 @@ pub enum ConfigError {
         /// The largest value allowed.
         max: &'static str,
     },
-    /// Rule 2: a duration Floe can't read.
+    /// Rule 2: a duration Iceblink can't read.
     #[error("{key} is \"{value}\", which is not a duration")]
     InvalidDuration {
         /// The key, as written in the file.
@@ -106,8 +106,8 @@ pub enum ConfigError {
         /// What to write instead.
         fix: String,
     },
-    /// Rule 4: a SigV4 service Floe can't sign for.
-    #[error("catalog.sigv4.service is \"{value}\", which Floe can't sign for")]
+    /// Rule 4: a SigV4 service Iceblink can't sign for.
+    #[error("catalog.sigv4.service is \"{value}\", which Iceblink can't sign for")]
     InvalidSigV4Service {
         /// The service from the file.
         value: String,
@@ -130,7 +130,7 @@ pub enum ConfigError {
     )]
     ConflictingCatalogAuth,
     /// Rule 5: a secret written in the file instead of `env:NAME`.
-    #[error("{key} looks like a plain secret, and secrets never go in floe.toml")]
+    #[error("{key} looks like a plain secret, and secrets never go in iceblink.toml")]
     PlainSecret {
         /// The key holding the secret.
         key: &'static str,
@@ -162,7 +162,7 @@ pub enum ConfigError {
         reason: String,
     },
     /// Rule 6: no allowed prefixes at all.
-    #[error("storage.allowed_prefixes is empty, so Floe could read nothing")]
+    #[error("storage.allowed_prefixes is empty, so Iceblink could read nothing")]
     NoAllowedPrefixes,
 }
 
@@ -170,12 +170,13 @@ impl ConfigError {
     /// What to change, as one instruction.
     pub fn fix(&self) -> String {
         match self {
-            Self::Read { .. } => "copy floe.example.toml to ./floe.toml and edit it, or pass \
-                                  --config with the file's path"
+            Self::Read { .. } => "copy iceblink.example.toml to ./iceblink.toml and edit it, or \
+                                  pass --config with the file's path"
                 .to_owned(),
-            Self::TooLarge { .. } => "check that --config points at floe.toml".to_owned(),
+            Self::TooLarge { .. } => "check that --config points at iceblink.toml".to_owned(),
             Self::Parse { .. } => {
-                "correct the TOML at that position; floe.example.toml shows every key".to_owned()
+                "correct the TOML at that position; iceblink.example.toml shows every key"
+                    .to_owned()
             }
             Self::NotLoopback { listen } => format!(
                 "use pg_listen = \"127.0.0.1:{}\" (password login arrives in v0.1)",
@@ -204,10 +205,10 @@ impl ConfigError {
                 "put it in an environment variable and write env:NAME".to_owned()
             }
             Self::InvalidSecretReference { .. } => {
-                "write it as env:NAME, such as env:FLOE_CATALOG_TOKEN".to_owned()
+                "write it as env:NAME, such as env:ICEBLINK_CATALOG_TOKEN".to_owned()
             }
             Self::MissingSecret { key, variable } => {
-                format!("set {variable} in Floe's environment, or remove {key}")
+                format!("set {variable} in Iceblink's environment, or remove {key}")
             }
             Self::InvalidPrefix { .. } => {
                 "write each entry as s3://bucket/prefix/, ending in a slash".to_owned()

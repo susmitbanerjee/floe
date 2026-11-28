@@ -8,7 +8,7 @@ use serde::de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor};
 
 use super::ConfigError;
 
-/// What floe.toml says for a secret, kept secret until checked: the user may have pasted the
+/// What iceblink.toml says for a secret, kept secret until checked: the user may have pasted the
 /// secret itself instead of `env:NAME`.
 #[derive(Debug)]
 pub(super) struct SecretReference(SecretString);

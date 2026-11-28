@@ -16,7 +16,7 @@ use datafusion_postgres::pgwire::error::{ErrorInfo, PgWireError};
 use crate::PgError;
 use crate::statement::QueryIds;
 
-/// SQLSTATE codes Floe sends, by name.
+/// SQLSTATE codes Iceblink sends, by name.
 pub(crate) mod sqlstate {
     pub(crate) const SUCCESS: &str = "00000";
     pub(crate) const INVALID_PARAMETER_VALUE: &str = "22023";
@@ -61,7 +61,7 @@ pub(crate) fn to_pgwire(error: &(dyn Error + 'static), request_id: &str) -> PgWi
 /// The SQLSTATE and client message for `error`; the message is empty for internal errors.
 fn classify(error: &(dyn Error + 'static)) -> (&'static str, String) {
     if let Some(error) = error.downcast_ref::<PgError>() {
-        return (floe_code(error), error.to_string());
+        return (own_code(error), error.to_string());
     }
     if let Some(error) = error.downcast_ref::<ParserError>() {
         return (sqlstate::SYNTAX_ERROR, error.to_string());
@@ -75,7 +75,7 @@ fn classify(error: &(dyn Error + 'static)) -> (&'static str, String) {
     (sqlstate::INTERNAL_ERROR, String::new())
 }
 
-fn floe_code(error: &PgError) -> &'static str {
+fn own_code(error: &PgError) -> &'static str {
     match error {
         PgError::ReadOnly { .. } => sqlstate::READ_ONLY_TRANSACTION,
         PgError::UnsupportedSetting { .. } | PgError::UnsupportedEncoding { .. } => {
@@ -145,17 +145,17 @@ fn chain(error: &(dyn Error + 'static)) -> String {
 
 /// The safety net: whatever error reaches pgwire still unmapped gets its SQLSTATE here, so no
 /// raw error text (which can name files) reaches a client.
-pub(crate) struct FloeErrorHandler {
+pub(crate) struct PgErrorHandler {
     ids: Arc<QueryIds>,
 }
 
-impl FloeErrorHandler {
+impl PgErrorHandler {
     pub(crate) fn new(ids: Arc<QueryIds>) -> Self {
         Self { ids }
     }
 }
 
-impl ErrorHandler for FloeErrorHandler {
+impl ErrorHandler for PgErrorHandler {
     fn on_error<C>(&self, _client: &C, error: &mut PgWireError)
     where
         C: ClientInfo,

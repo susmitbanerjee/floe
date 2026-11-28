@@ -27,7 +27,7 @@ impl Storages {
     ///
     /// # Errors
     ///
-    /// [`ScanError::Io`] for a scheme Floe doesn't read, such as `gs://`.
+    /// [`ScanError::Io`] for a scheme Iceblink doesn't read, such as `gs://`.
     pub(crate) fn for_location(&self, location: &str) -> Result<Arc<dyn Storage>, ScanError> {
         let scheme = location.split_once("://").map(|(scheme, _)| scheme);
         match scheme {
@@ -36,8 +36,8 @@ impl Storages {
             None if location.starts_with('/') => Ok(Arc::clone(&self.local)),
             _ => Err(ScanError::Io {
                 message: format!(
-                    "{} storage isn't supported: Floe reads s3:// locations, and file:// ones in \
-                     tests",
+                    "{} storage isn't supported: Iceblink reads s3:// locations, and file:// ones \
+                     in tests",
                     scheme.unwrap_or("this")
                 ),
             }),

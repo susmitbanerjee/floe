@@ -1,9 +1,10 @@
-//! Suite 3: psql golden files. Runs real psql against an in-process Floe over the floe-testkit
-//! `sales.orders` table and compares its output with tests/golden/psql/<psql major>/*.out.
+//! Suite 3: psql golden files. Runs real psql against an in-process Iceblink over the
+//! iceblink-testkit `sales.orders` table and compares its output with
+//! tests/golden/psql/<psql major>/*.out.
 //!
-//! Runs when `FLOE_PSQL_BIN` names a psql, when `psql` is on PATH, or when `FLOE_PSQL=1` (which
-//! fails if no psql is found). Otherwise it skips with a message. `UPDATE_GOLDEN=1` rewrites
-//! the golden files; reviewers must read the diff.
+//! Runs when `ICEBLINK_PSQL_BIN` names a psql, when `psql` is on PATH, or when
+//! `ICEBLINK_PSQL=1` (which fails if no psql is found). Otherwise it skips with a message.
+//! `UPDATE_GOLDEN=1` rewrites the golden files; reviewers must read the diff.
 
 use std::collections::BTreeMap;
 use std::io::Write as _;
@@ -12,8 +13,8 @@ use std::path::{Path, PathBuf};
 use datafusion::arrow::array::{Array, AsArray};
 use datafusion::arrow::datatypes::Decimal128Type;
 use datafusion::arrow::util::display::array_value_to_string;
-use floe_suites::{InProcess, SuiteError, workspace_root};
-use floe_testkit::{Fixture, TableFixture};
+use iceblink_suites::{InProcess, SuiteError, workspace_root};
+use iceblink_testkit::{Fixture, TableFixture};
 use tokio::process::Command;
 
 const REGION_QUERY: &str =
@@ -33,7 +34,7 @@ fn say(message: &str) {
 
 /// The psql to run, or `None` to skip.
 fn find_psql() -> Result<Option<PathBuf>, SuiteError> {
-    if let Some(path) = std::env::var_os("FLOE_PSQL_BIN") {
+    if let Some(path) = std::env::var_os("ICEBLINK_PSQL_BIN") {
         return Ok(Some(PathBuf::from(path)));
     }
     let on_path = std::env::var_os("PATH").and_then(|paths| {
@@ -41,10 +42,13 @@ fn find_psql() -> Result<Option<PathBuf>, SuiteError> {
             .map(|dir| dir.join("psql"))
             .find(|candidate| candidate.is_file())
     });
-    match (on_path, std::env::var("FLOE_PSQL").as_deref() == Ok("1")) {
+    match (
+        on_path,
+        std::env::var("ICEBLINK_PSQL").as_deref() == Ok("1"),
+    ) {
         (Some(path), _) => Ok(Some(path)),
         (None, true) => {
-            Err("FLOE_PSQL=1 but no psql on PATH: install it or set FLOE_PSQL_BIN".into())
+            Err("ICEBLINK_PSQL=1 but no psql on PATH: install it or set ICEBLINK_PSQL_BIN".into())
         }
         (None, false) => Ok(None),
     }
@@ -62,8 +66,8 @@ async fn major_version(psql: &Path) -> Result<String, SuiteError> {
 }
 
 /// psql's output for `command`, without anything that changes between runs.
-async fn run(psql: &Path, floe: &InProcess, command: &str) -> Result<String, SuiteError> {
-    let port = floe.address().port().to_string();
+async fn run(psql: &Path, server: &InProcess, command: &str) -> Result<String, SuiteError> {
+    let port = server.address().port().to_string();
     let output = Command::new(psql)
         .args([
             "-X",
@@ -74,7 +78,7 @@ async fn run(psql: &Path, floe: &InProcess, command: &str) -> Result<String, Sui
             "-p",
             &port,
             "-U",
-            "floe",
+            "iceblink",
             "-d",
             "lake",
         ])
@@ -131,7 +135,7 @@ fn expected_regions(fixture: &Fixture) -> Result<Vec<String>, SuiteError> {
 #[tokio::test(flavor = "multi_thread")]
 async fn psql_output_matches_the_golden_files() -> Result<(), SuiteError> {
     let Some(psql) = find_psql()? else {
-        say("skipped: no psql on PATH (set FLOE_PSQL_BIN, or FLOE_PSQL=1 to require it)");
+        say("skipped: no psql on PATH (set ICEBLINK_PSQL_BIN, or ICEBLINK_PSQL=1 to require it)");
         return Ok(());
     };
     let major = major_version(&psql).await?;
@@ -146,11 +150,11 @@ async fn psql_output_matches_the_golden_files() -> Result<(), SuiteError> {
         .seed(42)
         .build()
         .await?;
-    let floe = InProcess::start(fixture.catalog.clone(), &fixture.warehouse_prefix()).await?;
+    let server = InProcess::start(fixture.catalog.clone(), &fixture.warehouse_prefix()).await?;
 
     let mut mismatches = Vec::new();
     for (name, command) in CASES {
-        let output = run(&psql, &floe, command).await?;
+        let output = run(&psql, &server, command).await?;
         let file = golden.join(format!("{name}.out"));
         if update {
             std::fs::create_dir_all(&golden)?;
@@ -181,7 +185,7 @@ async fn psql_output_matches_the_golden_files() -> Result<(), SuiteError> {
             );
         }
     }
-    floe.stop().await?;
+    server.stop().await?;
     if mismatches.is_empty() {
         Ok(())
     } else {

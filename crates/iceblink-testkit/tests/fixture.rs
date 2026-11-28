@@ -4,7 +4,7 @@ use std::error::Error;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use floe_testkit::{Fixture, TableFixture};
+use iceblink_testkit::{Fixture, TableFixture};
 
 type TestResult = Result<(), Box<dyn Error>>;
 

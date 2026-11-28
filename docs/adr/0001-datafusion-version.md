@@ -5,7 +5,7 @@
 
 ## Context
 
-Floe combines three library families that must share one DataFusion major, and with it one
+Iceblink combines three library families that must share one DataFusion major, and with it one
 Arrow. Otherwise the types can't cross crate boundaries and the binary carries two copies of
 Arrow:
 
@@ -59,14 +59,14 @@ datafusion-postgres, which re-exports both, and Arrow is used through `datafusio
 is declared directly. Cargo.lock is the exact pin.
 
 Each crate sits in the crate that will own it, as a normal dependency so the licence check sees
-it: `floe-catalog` (iceberg, iceberg-catalog-rest), `floe-scan` (datafusion, iceberg-datafusion)
-and `floe-pg` (datafusion-postgres).
+it: `iceblink-catalog` (iceberg, iceberg-catalog-rest), `iceblink-scan` (datafusion, iceberg-datafusion)
+and `iceblink-pg` (datafusion-postgres).
 
-Features Floe turns on, and why:
+Features Iceblink turns on, and why:
 
 - `datafusion/parquet`: read Iceberg data files, which are Parquet.
 - `datafusion/sql`: plan SQL text into DataFusion logical plans.
-- `tokio/macros` and `tokio/rt-multi-thread`, in floe-scan's dev-dependencies only, for the
+- `tokio/macros` and `tokio/rt-multi-thread`, in iceblink-scan's dev-dependencies only, for the
   compile-together test's multi-threaded runtime.
 
 Nothing else. The iceberg 0.11 crates have no features. datafusion-postgres has only `postgis`,
@@ -76,12 +76,12 @@ What actually gets compiled is more: iceberg-datafusion, datafusion-postgres,
 datafusion-pg-catalog and arrow-pg all depend on `datafusion` with its default features, and
 Cargo unifies features. So DataFusion's whole default set is on: compression (bzip2, gzip, xz,
 zstd), the crypto, datetime, encoding, nested, regex, string and unicode functions, and
-recursive_protection. Floe can't turn these off without forking those crates. pgwire comes in
+recursive_protection. Iceblink can't turn these off without forking those crates. pgwire comes in
 with `server-api-ring`, so TLS uses ring, not aws-lc.
 
-`crates/floe-scan/tests/compile_together.rs` proves the pins fit. It runs `SELECT 1` on a
+`crates/iceblink-scan/tests/compile_together.rs` proves the pins fit. It runs `SELECT 1` on a
 SessionContext with an in-memory table, and checks with trait bounds that iceberg-datafusion's
-providers implement Floe's DataFusion traits and that `RestCatalog` implements Floe's
+providers implement Iceblink's DataFusion traits and that `RestCatalog` implements Iceblink's
 `iceberg::Catalog`. It also builds a `RestCatalogBuilder`, a `ServerOptions` and an unpolled
 `serve` future. If any family resolves to a different DataFusion or iceberg, it fails to compile.
 
@@ -117,7 +117,7 @@ What to watch:
   DataFusion 55. With datafusion-postgres 0.19 already on 55, that unblocks the move to 55.
   Check whether iceberg 0.12 is released by then too: the integration's main branch takes it
   from git today.
-- Whether iceberg-datafusion keeps publishing from apache/iceberg-rust after the move, so Floe
+- Whether iceberg-datafusion keeps publishing from apache/iceberg-rust after the move, so Iceblink
   follows the right repository.
 - datafusion-postgres dropping rustls-pemfile for rustls-pki-types' `PemObject`. It still
   depends on it in 0.19.

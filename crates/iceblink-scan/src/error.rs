@@ -7,15 +7,15 @@ use iceberg::ErrorKind;
 #[derive(Debug, Clone, thiserror::Error)]
 #[non_exhaustive]
 pub enum ScanError {
-    /// Something tried to write, delete or overwrite an object. Floe refused before storage.
+    /// Something tried to write, delete or overwrite an object. Iceblink refused before storage.
     #[error(
-        "Floe is read-only: a write, delete or overwrite was refused before it reached storage."
+        "Iceblink is read-only: a write, delete or overwrite was refused before it reached storage."
     )]
     ReadOnly,
     /// A table or file location sits outside `storage.allowed_prefixes`.
     #[error(
-        "a location under {path_prefix} is outside storage.allowed_prefixes, so Floe won't read \
-         it. Add the table's location to storage.allowed_prefixes if it should be readable."
+        "a location under {path_prefix} is outside storage.allowed_prefixes, so Iceblink won't \
+         read it. Add the table's location to storage.allowed_prefixes if it should be readable."
     )]
     LocationNotAllowed {
         /// The scheme and first segment of the location, never the full path.

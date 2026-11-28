@@ -1,4 +1,4 @@
-//! The values of Floe's own SET statements: statement_timeout, search_path and
+//! The values of Iceblink's own SET statements: statement_timeout, search_path and
 //! client_encoding, turned into checked values or a clear refusal.
 
 use std::time::Duration;
@@ -59,7 +59,7 @@ pub(crate) fn timeout_text(timeout: Duration) -> String {
 }
 
 /// Makes the first schema in the path that exists the session's default schema, and returns
-/// it. `"$user"` is skipped: Floe has no per-user schemas.
+/// it. `"$user"` is skipped: Iceblink has no per-user schemas.
 ///
 /// # Errors
 ///

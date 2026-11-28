@@ -1,6 +1,6 @@
-//! The statement allow-list: what Floe runs, what it keeps itself, and what it refuses.
+//! The statement allow-list: what Iceblink runs, what it keeps itself, and what it refuses.
 //!
-//! Floe runs SELECT, WITH, VALUES, EXPLAIN [ANALYZE] of those, and SHOW; it accepts SET for a
+//! Iceblink runs SELECT, WITH, VALUES, EXPLAIN [ANALYZE] of those, and SHOW; it accepts SET for a
 //! few session settings, and BEGIN, COMMIT and ROLLBACK as no-ops. Every other statement is
 //! refused with SQLSTATE 25006, naming its kind. DataFusion's own read-only plan check runs
 //! after this as a second layer.
@@ -12,13 +12,13 @@ use datafusion::sql::sqlparser::tokenizer::{Token, Tokenizer};
 
 use crate::PgError;
 
-/// What Floe does with a statement the allow-list lets through.
+/// What Iceblink does with a statement the allow-list lets through.
 #[derive(Debug, PartialEq)]
 pub(crate) enum Allowed<'a> {
     /// SELECT, WITH, VALUES, EXPLAIN of one of those, SHOW TABLES or SHOW COLUMNS: planned and
     /// run.
     Query,
-    /// `SET statement_timeout`, which Floe keeps and only lets go down.
+    /// `SET statement_timeout`, which Iceblink keeps and only lets go down.
     SetStatementTimeout(&'a [Expr]),
     /// `SET search_path`, which picks the session's default schema.
     SetSearchPath(&'a [Expr]),

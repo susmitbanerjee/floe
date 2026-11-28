@@ -1,11 +1,11 @@
-//! Floe started in-process, the way `floe serve` starts it, over any Iceberg catalog.
+//! Iceblink started in-process, the way `iceblink serve` starts it, over any Iceberg catalog.
 
 use std::error::Error;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use floe::{AppError, Deps, ShutdownSummary, ValidConfig};
-use floe_catalog::{Catalog, LakeCatalog};
+use iceblink::{AppError, Deps, ShutdownSummary, ValidConfig};
+use iceblink_catalog::{Catalog, LakeCatalog};
 use tokio::task::JoinHandle;
 use tokio_postgres::{Client, NoTls};
 use tokio_util::sync::CancellationToken;
@@ -13,7 +13,7 @@ use tokio_util::sync::CancellationToken;
 /// A suite's boxed error.
 pub type SuiteError = Box<dyn Error + Send + Sync>;
 
-/// A running Floe on 127.0.0.1 and an OS-chosen port.
+/// A running Iceblink on 127.0.0.1 and an OS-chosen port.
 pub struct InProcess {
     address: SocketAddr,
     shutdown: CancellationToken,
@@ -26,12 +26,12 @@ impl InProcess {
     ///
     /// # Errors
     ///
-    /// A config Floe refuses, or a failed startup.
+    /// A config Iceblink refuses, or a failed startup.
     pub async fn start(
         catalog: Arc<dyn Catalog>,
         warehouse_prefix: &str,
     ) -> Result<Self, SuiteError> {
-        let config = floe::parse_config(&local_config(warehouse_prefix), &|_| None)?;
+        let config = iceblink::parse_config(&local_config(warehouse_prefix), &|_| None)?;
         Self::start_with(
             config,
             Deps {
@@ -47,7 +47,7 @@ impl InProcess {
     ///
     /// A failed startup: listing the catalog or binding the listener.
     pub async fn start_with(config: ValidConfig, deps: Deps) -> Result<Self, SuiteError> {
-        let started = floe::start(config, deps).await?;
+        let started = iceblink::start(config, deps).await?;
         let address = started.address();
         let shutdown = CancellationToken::new();
         let serving = tokio::spawn(started.serve(shutdown.clone()));
@@ -73,7 +73,7 @@ impl InProcess {
         connect(self.address).await
     }
 
-    /// Stops Floe, waiting for in-flight queries as `floe serve` does on SIGTERM.
+    /// Stops Iceblink, waiting for in-flight queries as `iceblink serve` does on SIGTERM.
     ///
     /// # Errors
     ///
@@ -84,7 +84,7 @@ impl InProcess {
     }
 }
 
-/// A client for the Floe at `address`, database `lake`, user `floe`.
+/// A client for the Iceblink at `address`, database `lake`, user `iceblink`.
 ///
 /// # Errors
 ///
@@ -93,7 +93,7 @@ pub async fn connect(address: SocketAddr) -> Result<Client, tokio_postgres::Erro
     let (client, connection) = tokio_postgres::Config::new()
         .host(address.ip().to_string())
         .port(address.port())
-        .user("floe")
+        .user("iceblink")
         .dbname("lake")
         .connect(NoTls)
         .await?;
@@ -101,7 +101,7 @@ pub async fn connect(address: SocketAddr) -> Result<Client, tokio_postgres::Erro
     Ok(client)
 }
 
-/// floe.toml for a local warehouse: loopback on port 0, local files allowed.
+/// iceblink.toml for a local warehouse: loopback on port 0, local files allowed.
 fn local_config(warehouse_prefix: &str) -> String {
     format!(
         r#"

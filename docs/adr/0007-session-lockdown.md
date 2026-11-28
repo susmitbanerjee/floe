@@ -7,7 +7,7 @@
 
 psql users connect to database `lake` and expect schemas to be Iceberg namespaces and tables to
 be Iceberg tables. DataFusion asks for names synchronously and loads tables asynchronously.
-Floe also needs one session builder that can read lake tables and nothing else: defence in depth
+Iceblink also needs one session builder that can read lake tables and nothing else: defence in depth
 ahead of the Postgres statement allow-list (Prompt 8).
 
 Read from DataFusion 54.2.0:
@@ -31,8 +31,8 @@ Read from DataFusion 54.2.0:
 For the object store registry, which the prompt says should hold the configured bucket or test
 dir:
 
-1. **Register stores as asked.** Floe's scans never use them: they read through iceberg's FileIO
-   and Floe's counting storage. A registered store only helps DataFusion's own file readers,
+1. **Register stores as asked.** Iceblink's scans never use them: they read through iceberg's FileIO
+   and Iceblink's counting storage. A registered store only helps DataFusion's own file readers,
    which this session disables.
 2. **A closed registry** that serves no store.
 
@@ -41,7 +41,7 @@ dir:
 - **Catalog.**
   - `LakeCatalogProvider` and `NamespaceProvider` serve a listing (namespace to table names)
     behind an `RwLock`, filled by `refresh()`.
-  - Tables load on first use into `FloeTableProvider` and are kept until the next `refresh()`,
+  - Tables load on first use into `LakeTableProvider` and are kept until the next `refresh()`,
     which also forgets loaded tables, so a refresh picks up new snapshots too.
   - `table_type()` answers from the listing.
   - An unlisted table returns `None`, so DataFusion reports "table 'lake.sales.missing' not
@@ -60,7 +60,7 @@ dir:
 - **Object stores: option 2, maintainer's choice.** `ClosedObjectStoreRegistry` refuses every
   store. It drops and counts registrations, because the trait can't return an error there.
 - **Signatures, simplified by the closed registry.**
-  - `new_session(catalog)` takes no `StorageSettings`; each `FloeTableProvider` gets them from the
+  - `new_session(catalog)` takes no `StorageSettings`; each `LakeTableProvider` gets them from the
     catalog provider.
   - It returns `Result`, because DataFusion's runtime builder can fail.
   - `refresh(&self)` uses the catalog the provider already holds for lazy loads, so listings and

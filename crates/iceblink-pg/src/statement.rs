@@ -14,8 +14,8 @@ use datafusion::sql::sqlparser::ast::Statement;
 use datafusion_postgres::pgwire::api::results::{QueryResponse, Response};
 use datafusion_postgres::pgwire::error::{PgWireError, PgWireResult};
 use datafusion_postgres::pgwire::messages::data::DataRow;
-use floe_scan::{QueryReceipt, ScanReceipt};
 use futures::{Stream, StreamExt, stream};
+use iceblink_scan::{QueryReceipt, ScanReceipt};
 use tokio::time::{Instant, Sleep};
 use tracing::{Instrument, Span, field};
 

@@ -1,5 +1,5 @@
 [package]
-name = "floe"
+name = "iceblink"
 description = "Serves Apache Iceberg tables over the Postgres wire protocol, read-only."
 version.workspace = true
 edition.workspace = true
@@ -7,7 +7,7 @@ license.workspace = true
 rust-version.workspace = true
 
 [[bin]]
-name = "floe"
+name = "iceblink"
 path = "src/main.rs"
 # The library carries the docs; documenting both would collide on the name.
 doc = false
@@ -16,9 +16,9 @@ doc = false
 anyhow = { workspace = true, features = ["std"] }
 # No "color" feature: help and usage errors stay plain text (ADR 0010).
 clap = { workspace = true, features = ["std", "help", "usage", "error-context", "derive"] }
-floe-catalog.workspace = true
-floe-pg.workspace = true
-floe-scan.workspace = true
+iceblink-catalog.workspace = true
+iceblink-pg.workspace = true
+iceblink-scan.workspace = true
 secrecy.workspace = true
 serde = { workspace = true, features = ["std", "derive"] }
 thiserror.workspace = true
@@ -32,7 +32,7 @@ url = { workspace = true, features = ["std"] }
 
 [dev-dependencies]
 assert_cmd.workspace = true
-floe-testkit.workspace = true
+iceblink-testkit.workspace = true
 futures = { workspace = true, features = ["std"] }
 tempfile.workspace = true
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

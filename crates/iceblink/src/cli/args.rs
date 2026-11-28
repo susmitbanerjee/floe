@@ -1,4 +1,4 @@
-//! The command line: `floe serve`, `floe config check`, and the global logging flags.
+//! The command line: `iceblink serve`, `iceblink config check`, and the global logging flags.
 
 use std::path::PathBuf;
 
@@ -8,9 +8,9 @@ use tracing::level_filters::LevelFilter;
 use super::failure::EXIT_CODES_HELP;
 use crate::config::DEFAULT_CONFIG_PATH;
 
-/// Everything `floe` accepts on its command line.
+/// Everything `iceblink` accepts on its command line.
 #[derive(Debug, Parser)]
-#[command(name = "floe", version, about, after_help = EXIT_CODES_HELP)]
+#[command(name = "iceblink", version, about, after_help = EXIT_CODES_HELP)]
 pub(crate) struct Args {
     #[command(subcommand)]
     pub(crate) command: Command,
@@ -22,20 +22,20 @@ pub(crate) struct Args {
     pub(crate) log_level: LogLevel,
 }
 
-/// What `floe` was asked to do.
+/// What `iceblink` was asked to do.
 #[derive(Debug, Subcommand)]
 pub(crate) enum Command {
     /// Serve the catalog's tables to Postgres clients until Ctrl-C or SIGTERM.
     Serve(ConfigFile),
-    /// Work with floe.toml.
+    /// Work with iceblink.toml.
     #[command(subcommand)]
     Config(ConfigCommand),
 }
 
-/// `floe config …`.
+/// `iceblink config …`.
 #[derive(Debug, Subcommand)]
 pub(crate) enum ConfigCommand {
-    /// Check floe.toml without connecting to anything.
+    /// Check iceblink.toml without connecting to anything.
     Check(ConfigFile),
 }
 
@@ -95,25 +95,25 @@ mod tests {
     }
 
     #[test]
-    fn defaults_to_floe_toml_text_logs_and_info() -> Result<(), clap::Error> {
-        let args = Args::try_parse_from(["floe", "serve"])?;
+    fn defaults_to_the_config_file_text_logs_and_info() -> Result<(), clap::Error> {
+        let args = Args::try_parse_from(["iceblink", "serve"])?;
         assert_eq!(args.log_format, LogFormat::Text);
         assert_eq!(args.log_level, LogLevel::Info);
         let Command::Serve(file) = args.command else {
             return Err(clap::Error::new(clap::error::ErrorKind::InvalidSubcommand));
         };
-        assert_eq!(file.config, PathBuf::from("./floe.toml"));
+        assert_eq!(file.config, PathBuf::from("./iceblink.toml"));
         Ok(())
     }
 
     #[test]
     fn config_check_takes_a_path_and_global_flags_go_anywhere() -> Result<(), clap::Error> {
         let args = Args::try_parse_from([
-            "floe",
+            "iceblink",
             "config",
             "check",
             "--config",
-            "/etc/floe/floe.toml",
+            "/etc/iceblink/iceblink.toml",
             "--log-format",
             "json",
         ])?;
@@ -121,7 +121,7 @@ mod tests {
         let Command::Config(ConfigCommand::Check(file)) = args.command else {
             return Err(clap::Error::new(clap::error::ErrorKind::InvalidSubcommand));
         };
-        assert_eq!(file.config, PathBuf::from("/etc/floe/floe.toml"));
+        assert_eq!(file.config, PathBuf::from("/etc/iceblink/iceblink.toml"));
         Ok(())
     }
 }

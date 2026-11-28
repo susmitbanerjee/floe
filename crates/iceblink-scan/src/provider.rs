@@ -1,4 +1,4 @@
-//! `FloeTableProvider`: a DataFusion table over one loaded Iceberg table, read-only, with one
+//! `LakeTableProvider`: a DataFusion table over one loaded Iceberg table, read-only, with one
 //! pinned snapshot and its own storage counters per query.
 
 use std::fmt;
@@ -20,7 +20,7 @@ use iceberg::spec::Snapshot;
 use iceberg::table::Table;
 use iceberg_datafusion::physical_plan::convert_filters_to_predicate;
 
-use crate::exec::{FloeScanExec, ScanPlan};
+use crate::exec::{LakeScanExec, ScanPlan};
 use crate::io::{CountingStorage, IoStats, query_file_io};
 use crate::location::LocationGuard;
 use crate::receipt::QueryReceipt;
@@ -30,20 +30,21 @@ use crate::{ScanError, StorageSettings};
 /// Serves one loaded Iceberg table to DataFusion. Each `scan` pins the table's current snapshot
 /// and reads it through its own counting, write-refusing storage. A query sees a newer snapshot
 /// when the caller loads the table again and builds a new provider.
-pub struct FloeTableProvider {
+pub struct LakeTableProvider {
     table: Table,
     schema: SchemaRef,
     guard: LocationGuard,
     inner: Arc<dyn Storage>,
 }
 
-impl FloeTableProvider {
+impl LakeTableProvider {
     /// Wraps `table`, reading only under `settings.allowed_prefixes`.
     ///
     /// # Errors
     ///
-    /// [`ScanError::Io`] when the table lives on storage Floe can't read (Floe reads `s3://`,
-    /// and `file://` in tests), and [`ScanError::Iceberg`] when its schema has no Arrow form.
+    /// [`ScanError::Io`] when the table lives on storage Iceblink can't read (Iceblink reads
+    /// `s3://`, and `file://` in tests), and [`ScanError::Iceberg`] when its schema has no Arrow
+    /// form.
     pub fn new(table: Table, settings: &StorageSettings) -> Result<Self, ScanError> {
         let inner = Storages::new(settings).for_location(table.metadata().location())?;
         Self::with_inner_storage(table, settings, inner)
@@ -81,7 +82,7 @@ impl FloeTableProvider {
         &self,
         projection: Option<&Vec<usize>>,
         filters: &[Expr],
-    ) -> Result<FloeScanExec, ScanError> {
+    ) -> Result<LakeScanExec, ScanError> {
         let metadata = self.table.metadata();
         let snapshot = metadata
             .current_snapshot()
@@ -119,7 +120,7 @@ impl FloeTableProvider {
             .try_collect()
             .await
             .map_err(|error| ScanError::from_iceberg(&error))?;
-        Ok(FloeScanExec::new(ScanPlan {
+        Ok(LakeScanExec::new(ScanPlan {
             table: display_name(&self.table),
             snapshot_id: snapshot.snapshot_id(),
             files_total: total_data_files(snapshot),
@@ -132,17 +133,17 @@ impl FloeTableProvider {
     }
 }
 
-impl fmt::Debug for FloeTableProvider {
+impl fmt::Debug for LakeTableProvider {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
-            .debug_struct("FloeTableProvider")
+            .debug_struct("LakeTableProvider")
             .field("table", &display_name(&self.table))
             .finish_non_exhaustive()
     }
 }
 
 #[async_trait]
-impl TableProvider for FloeTableProvider {
+impl TableProvider for LakeTableProvider {
     fn schema(&self) -> SchemaRef {
         Arc::clone(&self.schema)
     }

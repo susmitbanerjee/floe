@@ -25,7 +25,7 @@ fn rule_1_pg_listen_must_be_loopback() {
                 |d| d.pg_listen = r#""0.0.0.0:5432""#,
                 Expect::Invalid(
                     |e| matches!(e, ConfigError::NotLoopback { .. }),
-                    "pg_listen is 0.0.0.0:5432, but this build has no authentication, so Floe \
+                    "pg_listen is 0.0.0.0:5432, but this build has no authentication, so Iceblink \
                      only listens on loopback. fix: use pg_listen = \"127.0.0.1:5432\" (password \
                      login arrives in v0.1)",
                 ),
@@ -145,7 +145,7 @@ fn rule_3_urls_use_https_except_to_loopback_and_always_with_auth() {
                 "https with a credential",
                 |d| {
                     d.uri = r#""https://catalog.example.com/iceberg""#;
-                    d.credential = Some(r#""env:FLOE_CATALOG_TOKEN""#);
+                    d.credential = Some(r#""env:ICEBLINK_CATALOG_TOKEN""#);
                 },
                 Expect::Valid,
             ),
@@ -161,7 +161,7 @@ fn rule_3_urls_use_https_except_to_loopback_and_always_with_auth() {
             ),
             (
                 "http with a credential",
-                |d| d.credential = Some(r#""env:FLOE_CATALOG_TOKEN""#),
+                |d| d.credential = Some(r#""env:ICEBLINK_CATALOG_TOKEN""#),
                 Expect::Invalid(bad_url, "catalog.uri must use https"),
             ),
             (
@@ -232,7 +232,7 @@ fn rule_3_a_url_can_opt_in_to_plain_http_on_a_private_network() {
                 |d| {
                     d.uri = r#""http://lakekeeper:8181/catalog""#;
                     d.catalog_extra = "allow_plain_http = true";
-                    d.credential = Some(r#""env:FLOE_CATALOG_TOKEN""#);
+                    d.credential = Some(r#""env:ICEBLINK_CATALOG_TOKEN""#);
                 },
                 Expect::Invalid(bad_url, "catalog.uri must use https"),
             ),
@@ -338,7 +338,7 @@ fn rule_4_sigv4_names_a_known_service_and_a_region() {
                 "bearer credential and sigv4 together",
                 |d| {
                     d.uri = r#""https://glue.ap-south-1.amazonaws.com/iceberg""#;
-                    d.credential = Some(r#""env:FLOE_CATALOG_TOKEN""#);
+                    d.credential = Some(r#""env:ICEBLINK_CATALOG_TOKEN""#);
                     d.sigv4 = Some((r#""ap-south-1""#, r#""glue""#));
                 },
                 Expect::Invalid(
@@ -376,7 +376,7 @@ fn rule_5_secrets_are_env_references_that_resolve() {
                 "variable that is set",
                 |d| {
                     d.uri = r#""https://catalog.example.com""#;
-                    d.credential = Some(r#""env:FLOE_CATALOG_TOKEN""#);
+                    d.credential = Some(r#""env:ICEBLINK_CATALOG_TOKEN""#);
                 },
                 Expect::Valid,
             ),
@@ -389,14 +389,14 @@ fn rule_5_secrets_are_env_references_that_resolve() {
                 Expect::Invalid(
                     |e| matches!(e, ConfigError::PlainSecret { .. }),
                     "catalog.credential looks like a plain secret, and secrets never go in \
-                     floe.toml. fix: put it in an environment variable and write env:NAME",
+                     iceblink.toml. fix: put it in an environment variable and write env:NAME",
                 ),
             ),
             (
                 "lowercase variable name",
                 |d| {
                     d.uri = r#""https://catalog.example.com""#;
-                    d.credential = Some(r#""env:floe_token""#);
+                    d.credential = Some(r#""env:iceblink_token""#);
                 },
                 Expect::Invalid(
                     |e| matches!(e, ConfigError::InvalidSecretReference { .. }),
@@ -407,22 +407,22 @@ fn rule_5_secrets_are_env_references_that_resolve() {
                 "variable that is not set",
                 |d| {
                     d.uri = r#""https://catalog.example.com""#;
-                    d.credential = Some(r#""env:FLOE_MISSING""#);
+                    d.credential = Some(r#""env:ICEBLINK_MISSING""#);
                 },
                 Expect::Invalid(
                     |e| matches!(e, ConfigError::MissingSecret { .. }),
-                    "FLOE_MISSING, which is not set",
+                    "ICEBLINK_MISSING, which is not set",
                 ),
             ),
             (
                 "variable that is empty",
                 |d| {
                     d.uri = r#""https://catalog.example.com""#;
-                    d.credential = Some(r#""env:FLOE_EMPTY""#);
+                    d.credential = Some(r#""env:ICEBLINK_EMPTY""#);
                 },
                 Expect::Invalid(
                     |e| matches!(e, ConfigError::MissingSecret { .. }),
-                    "FLOE_EMPTY, which is not set",
+                    "ICEBLINK_EMPTY, which is not set",
                 ),
             ),
             (
@@ -477,13 +477,13 @@ fn rule_6_allowed_prefixes_are_s3_folders() {
             ),
             (
                 "local files without the flag",
-                |d| d.allowed_prefixes = r#"["file:///tmp/floe/"]"#,
+                |d| d.allowed_prefixes = r#"["file:///tmp/iceblink/"]"#,
                 Expect::Invalid(bad_prefix, "file:// needs allow_local_files = true"),
             ),
             (
                 "local files with the flag",
                 |d| {
-                    d.allowed_prefixes = r#"["file:///tmp/floe/"]"#;
+                    d.allowed_prefixes = r#"["file:///tmp/iceblink/"]"#;
                     d.allow_local_files = "true";
                 },
                 Expect::Valid,
@@ -517,7 +517,7 @@ fn rule_7_unknown_keys_name_the_key_and_the_valid_keys() {
                 |d| {
                     d.uri = r#""https://glue.example.com""#;
                     d.sigv4 = Some((r#""ap-south-1""#, r#""glue""#));
-                    d.sigv4_extra = "role_arn = \"arn:aws:iam::123456789012:role/floe\"";
+                    d.sigv4_extra = "role_arn = \"arn:aws:iam::123456789012:role/iceblink\"";
                 },
                 Expect::Invalid(
                     parse,

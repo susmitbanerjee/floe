@@ -1,4 +1,4 @@
-//! Serves Floe over the Postgres wire protocol: startup, simple and extended queries, and
+//! Serves Iceblink over the Postgres wire protocol: startup, simple and extended queries, and
 //! errors with the matching SQLSTATE, on top of datafusion-postgres and pgwire.
 //!
 //! It must never run a statement outside the allow-list: SELECT, EXPLAIN, SHOW, and SET for

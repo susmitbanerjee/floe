@@ -1,4 +1,4 @@
-//! The HTTP client Floe hands to iceberg's REST catalog, and the static bearer-token auth.
+//! The HTTP client Iceblink hands to iceberg's REST catalog, and the static bearer-token auth.
 
 use std::collections::HashMap;
 use std::fmt;
@@ -13,14 +13,14 @@ use secrecy::{ExposeSecret, SecretString};
 use crate::{CatalogError, CatalogTimeouts};
 
 /// Sent with every catalog request, as `User-Agent`.
-pub(crate) const USER_AGENT: &str = concat!("floe/", env!("CARGO_PKG_VERSION"));
+pub(crate) const USER_AGENT: &str = concat!("iceblink/", env!("CARGO_PKG_VERSION"));
 
 /// Builds the client every catalog request goes through: rustls with compiled-in roots, a
-/// connect timeout and a total per-request timeout, Floe's user agent, and no redirects, so an
+/// connect timeout and a total per-request timeout, Iceblink's user agent, and no redirects, so an
 /// untrusted catalog can't bounce the credential to another host.
 ///
 /// The webpki roots are named explicitly, so a dependency that turns on reqwest's
-/// native-roots feature can't widen what Floe trusts (docs/adr/0009-s3-reads.md).
+/// native-roots feature can't widen what Iceblink trusts (docs/adr/0009-s3-reads.md).
 pub(crate) fn build_client(timeouts: &CatalogTimeouts) -> Result<reqwest::Client, CatalogError> {
     reqwest::Client::builder()
         .use_rustls_tls()

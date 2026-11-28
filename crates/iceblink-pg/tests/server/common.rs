@@ -1,5 +1,5 @@
-//! An in-process Floe server on 127.0.0.1:0 over the floe-testkit `sales.orders` table, and a
-//! tokio-postgres client for it.
+//! An in-process Iceblink server on 127.0.0.1:0 over the iceblink-testkit `sales.orders` table,
+//! and a tokio-postgres client for it.
 
 use std::error::Error;
 use std::net::SocketAddr;
@@ -7,10 +7,10 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
-use floe_catalog::LakeCatalog;
-use floe_pg::{PgError, ServerSettings, ShutdownSummary, serve_on};
-use floe_scan::{LakeCatalogProvider, StorageSettings, new_session};
-use floe_testkit::{Fixture, TableFixture};
+use iceblink_catalog::LakeCatalog;
+use iceblink_pg::{PgError, ServerSettings, ShutdownSummary, serve_on};
+use iceblink_scan::{LakeCatalogProvider, StorageSettings, new_session};
+use iceblink_testkit::{Fixture, TableFixture};
 use tokio::net::TcpListener;
 use tokio::task::JoinHandle;
 use tokio_postgres::{Client, NoTls, SimpleQueryMessage};
@@ -90,7 +90,7 @@ impl TestServer {
         let (client, connection) = tokio_postgres::Config::new()
             .host("127.0.0.1")
             .port(self.address.port())
-            .user("floe")
+            .user("iceblink")
             .dbname("lake")
             .connect(NoTls)
             .await?;

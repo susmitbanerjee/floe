@@ -19,9 +19,9 @@ mod storage;
 
 pub use catalog::{LakeCatalogProvider, RefreshSummary};
 pub use error::ScanError;
-pub use exec::FloeScanExec;
+pub use exec::LakeScanExec;
 pub use io::IoCounts;
-pub use provider::FloeTableProvider;
+pub use provider::LakeTableProvider;
 pub use receipt::{QueryReceipt, ScanReceipt};
 pub use session::{CATALOG_NAME, new_session};
 pub use settings::StorageSettings;

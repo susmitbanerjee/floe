@@ -1,6 +1,6 @@
 use url::Url;
 
-/// Where table data lives and which locations Floe may read, already checked by the binary's
+/// Where table data lives and which locations Iceblink may read, already checked by the binary's
 /// config loader.
 #[derive(Debug, Clone)]
 pub struct StorageSettings {

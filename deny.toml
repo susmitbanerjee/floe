@@ -7,9 +7,9 @@
 # to warnings; see docs/adr/0002-unmaintained-advisories-fail-the-check.md. To accept one, add an
 # `ignore` entry with a reason and an absolute expiry date.
 unmaintained = "all"
-# Each entry is an unmaintained crate deep in the DataFusion, Arrow or pgwire tree that Floe can't
-# replace on its own, and none has a patched version. The expiry lines up with the quarterly
-# upgrade in docs/adr/0001-datafusion-version.md: re-check each one then.
+# Each entry is an unmaintained crate deep in the DataFusion, Arrow or pgwire tree that Iceblink
+# can't replace on its own, and none has a patched version. The expiry lines up with the
+# quarterly upgrade in docs/adr/0001-datafusion-version.md: re-check each one then.
 ignore = [
     { id = "RUSTSEC-2025-0134", expiry = "2027-02-17", reason = "rustls-pemfile: datafusion-postgres 0.18 reads PEM files with it; the fix is upstream moving to rustls-pki-types PemObject" },
     { id = "RUSTSEC-2024-0436", expiry = "2027-02-17", reason = "paste: macro-only dependency of parquet 58, no runtime code" },
@@ -35,14 +35,14 @@ exceptions = [
     # recursive_protection -> stacker -> psm). The LLVM exception only widens Apache-2.0.
     { crate = "ar_archive_writer", allow = ["Apache-2.0 WITH LLVM-exception"] },
     # pgwire (through datafusion-postgres) parses X.509 certificates with it. MPL-2.0 is file-level
-    # copyleft: Floe ships it unmodified and its source stays public on crates.io.
+    # copyleft: Iceblink ships it unmodified and its source stays public on crates.io.
     { crate = "x509-certificate", allow = ["MPL-2.0"] },
     # Rust port of libbzip2 behind DataFusion's default "compression" feature (async-compression ->
     # bzip2), which iceberg-datafusion and datafusion-postgres turn on. Permissive BSD-style terms
     # (keep the notice, mark modified copies, no endorsement) but not on the OSI list, so it is
     # allowed for this crate only. Maintainer approved 2026-11-19; see ADR 0001.
     { crate = "libbz2-rs-sys", allow = ["bzip2-1.0.6"] },
-    # Mozilla's root certificates compiled into the catalog client (reqwest rustls-tls), so Floe
+    # Mozilla's root certificates compiled into the catalog client (reqwest rustls-tls), so Iceblink
     # reads no certificate files at runtime. CDLA-Permissive-2.0 is a permissive data licence,
     # not on the OSI list, so it is allowed for this crate only. Maintainer approved 2026-11-19;
     # see ADR 0004.

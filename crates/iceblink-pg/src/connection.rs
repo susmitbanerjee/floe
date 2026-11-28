@@ -1,5 +1,5 @@
-//! What pgwire runs for one connection: Floe's handlers for a served connection, and a
-//! startup-only refusal for one Floe turns away (too many connections, shutting down, or no
+//! What pgwire runs for one connection: Iceblink's handlers for a served connection, and a
+//! startup-only refusal for one Iceblink turns away (too many connections, shutting down, or no
 //! session).
 
 use std::fmt::Debug;
@@ -21,18 +21,18 @@ use datafusion_postgres::pgwire::messages::{PgWireBackendMessage, PgWireFrontend
 use futures::Sink;
 
 use crate::PgError;
-use crate::errors::{FloeErrorHandler, to_error_info};
-use crate::handler::FloeHandler;
+use crate::errors::{PgErrorHandler, to_error_info};
+use crate::handler::PgHandler;
 
 /// A served connection's handlers.
-pub(crate) struct FloeHandlers {
-    pub(crate) handler: Arc<FloeHandler>,
-    pub(crate) startup: Arc<FloeStartup>,
-    pub(crate) errors: Arc<FloeErrorHandler>,
+pub(crate) struct PgHandlers {
+    pub(crate) handler: Arc<PgHandler>,
+    pub(crate) startup: Arc<PgStartup>,
+    pub(crate) errors: Arc<PgErrorHandler>,
     pub(crate) cancel: Arc<DefaultCancelHandler>,
 }
 
-impl PgWireServerHandlers for FloeHandlers {
+impl PgWireServerHandlers for PgHandlers {
     fn simple_query_handler(&self) -> Arc<impl SimpleQueryHandler> {
         Arc::clone(&self.handler)
     }
@@ -56,18 +56,18 @@ impl PgWireServerHandlers for FloeHandlers {
 
 /// Startup without authentication (v0.1 adds it): registers the connection for cancel
 /// requests and tells the client what kind of server this is.
-pub(crate) struct FloeStartup {
+pub(crate) struct PgStartup {
     connections: Arc<ConnectionManager>,
     parameters: DefaultServerParameterProvider,
     keys: RandomPidSecretKeyGenerator,
 }
 
-impl FloeStartup {
+impl PgStartup {
     /// `search_path` is the session's default schema, reported to the client.
     pub(crate) fn new(connections: Arc<ConnectionManager>, search_path: String) -> Self {
         let mut parameters = DefaultServerParameterProvider::default();
         // Clients read the leading version number; the rest says which server answered.
-        parameters.server_version = format!("16.6 (Floe {})", env!("CARGO_PKG_VERSION"));
+        parameters.server_version = format!("16.6 (Iceblink {})", env!("CARGO_PKG_VERSION"));
         parameters.client_encoding = Some("UTF8".to_owned());
         parameters.integer_datetimes = true;
         parameters.is_superuser = false;
@@ -82,7 +82,7 @@ impl FloeStartup {
 }
 
 #[async_trait]
-impl StartupHandler for FloeStartup {
+impl StartupHandler for PgStartup {
     async fn on_startup<C>(
         &self,
         client: &mut C,
@@ -113,7 +113,7 @@ impl StartupHandler for FloeStartup {
     }
 }
 
-/// A connection Floe turns away: FATAL with the reason, right after the client's startup
+/// A connection Iceblink turns away: FATAL with the reason, right after the client's startup
 /// message, as Postgres does. Cancel requests on such a connection still work.
 pub(crate) struct Refusal {
     code: String,

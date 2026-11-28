@@ -21,7 +21,7 @@ cargo-deny 0.21.0, the current release, can't express "warn" for unmaintained ad
 1. **`unmaintained = "all"` and expiring ignores.** Every unmaintained crate fails the gate
    until someone replaces it or records why it is acceptable and until when. Strictest. A new
    advisory on a deep dependency can turn CI red on an unrelated pull request.
-2. **`unmaintained = "workspace"`.** Fails only for crates Floe depends on directly. Transitive
+2. **`unmaintained = "workspace"`.** Fails only for crates Iceblink depends on directly. Transitive
    unmaintained crates are not reported at all, not even as warnings.
 3. **`unmaintained = "none"` plus a separate advisory report.** Never fails, but nobody reads
    reports that never fail, so it gives up the signal.

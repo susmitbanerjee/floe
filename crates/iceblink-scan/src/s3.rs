@@ -1,7 +1,7 @@
 //! Reads table files from S3 and S3-compatible stores such as MinIO
 //! (docs/adr/0009-s3-reads.md).
 //!
-//! Floe's own reader: HEAD for sizes, GET (whole or ranged) for bytes, each signed with SigV4.
+//! Iceblink's own reader: HEAD for sizes, GET (whole or ranged) for bytes, each signed with SigV4.
 //! No other request exists in this module, so it can't write; writes, deletes and output files
 //! fail here, behind `CountingStorage`'s own refusal. Credentials come from the standard AWS
 //! chain on the first read, so startup needs no network. Responses are never parsed beyond
@@ -20,10 +20,10 @@ use aws_sigv4::http_request::{
 use aws_sigv4::sign::v4;
 use aws_smithy_runtime_api::client::identity::Identity;
 use bytes::Bytes;
-use floe_catalog::{AwsCredentials, CatalogError, CatalogTimeouts};
 use futures::stream::BoxStream;
 use iceberg::ErrorKind;
 use iceberg::io::{FileMetadata, FileRead, FileWrite, InputFile, OutputFile, Storage};
+use iceblink_catalog::{AwsCredentials, CatalogError, CatalogTimeouts};
 use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, utf8_percent_encode};
 use reqwest::header::{CONTENT_LENGTH, HeaderName, HeaderValue, RANGE};
 use reqwest::{Method, Response, StatusCode};
@@ -45,7 +45,7 @@ const REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
 const MAX_ATTEMPTS: u32 = 3;
 
 /// Sent with every S3 request, as `User-Agent`.
-const USER_AGENT: &str = concat!("floe/", env!("CARGO_PKG_VERSION"));
+const USER_AGENT: &str = concat!("iceblink/", env!("CARGO_PKG_VERSION"));
 
 /// S3's URI encoding of a key segment: everything but unreserved characters.
 const KEY_SEGMENT: &AsciiSet = &NON_ALPHANUMERIC
@@ -93,7 +93,7 @@ struct S3State {
     credentials: tokio::sync::OnceCell<AwsCredentials>,
 }
 
-/// One object: its location as written, and the URL Floe requests.
+/// One object: its location as written, and the URL Iceblink requests.
 #[derive(Debug, Clone)]
 struct Object {
     location: String,
@@ -210,7 +210,7 @@ impl S3Storage {
 }
 
 /// The HTTP client every S3 request uses: rustls with only the compiled-in webpki roots, a
-/// connect and a total timeout, Floe's user agent, and no redirects.
+/// connect and a total timeout, Iceblink's user agent, and no redirects.
 fn client() -> Result<reqwest::Client, String> {
     reqwest::Client::builder()
         .use_rustls_tls()
@@ -328,7 +328,7 @@ fn status_error(location: &str, status: StatusCode) -> iceberg::Error {
     let code = status.as_u16();
     let message = match code {
         403 => format!(
-            "S3 refused access to {location} (HTTP 403): check that Floe's AWS identity may \
+            "S3 refused access to {location} (HTTP 403): check that Iceblink's AWS identity may \
              s3:GetObject there"
         ),
         404 => format!("{location} does not exist in S3 (HTTP 404)"),
@@ -345,7 +345,7 @@ fn refused() -> iceberg::Error {
 }
 
 #[async_trait]
-#[typetag::serde(name = "floe-s3")]
+#[typetag::serde(name = "iceblink-s3")]
 impl Storage for S3Storage {
     async fn exists(&self, path: &str) -> iceberg::Result<bool> {
         let response = self.head(path).await?;

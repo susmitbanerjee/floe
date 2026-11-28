@@ -27,14 +27,14 @@ fn parse_errors_carry_line_and_column() {
     );
     let message = error.map(|error| error.to_string()).unwrap_or_default();
     assert!(
-        message.starts_with("floe.toml line 3, column 3: "),
+        message.starts_with("iceblink.toml line 3, column 3: "),
         "got {message:?}"
     );
 }
 
 #[test]
 fn refuses_files_over_64_kib() {
-    let path = Path::new("floe.toml");
+    let path = Path::new("iceblink.toml");
     let at_limit = read_limited(io::repeat(b' ').take(MAX_CONFIG_BYTES), path);
     assert!(at_limit.is_ok(), "got {at_limit:?}");
 
@@ -53,7 +53,7 @@ fn debug_output_never_contains_the_credential() {
         uri: r#""https://catalog.example.com""#,
         ..Doc::default()
     };
-    doc.credential = Some(r#""env:FLOE_CATALOG_TOKEN""#);
+    doc.credential = Some(r#""env:ICEBLINK_CATALOG_TOKEN""#);
     let config = doc.load();
     let credential = config
         .as_ref()
@@ -87,10 +87,10 @@ fn errors_never_contain_the_credential() {
         // A good reference over plain http is refused; the variable's value must not appear.
         (
             "set variable over http",
-            r#""env:FLOE_CATALOG_TOKEN""#,
+            r#""env:ICEBLINK_CATALOG_TOKEN""#,
             SECRET,
         ),
-        ("variable not set", r#""env:FLOE_MISSING""#, SECRET),
+        ("variable not set", r#""env:ICEBLINK_MISSING""#, SECRET),
     ];
     for (name, credential, secret) in cases {
         let doc = Doc {
@@ -112,9 +112,9 @@ fn errors_never_contain_the_credential() {
 
 #[test]
 fn example_config_loads_cleanly() {
-    let example = include_str!("../../../../../floe.example.toml");
+    let example = include_str!("../../../../../iceblink.example.toml");
     let config = from_toml(example, &|_| None);
-    assert!(config.is_ok(), "floe.example.toml failed: {config:?}");
+    assert!(config.is_ok(), "iceblink.example.toml failed: {config:?}");
 }
 
 #[test]

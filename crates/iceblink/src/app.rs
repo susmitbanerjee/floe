@@ -1,17 +1,17 @@
-//! Floe's startup and shutdown, given a checked config and a connected catalog: list the
+//! Iceblink's startup and shutdown, given a checked config and a connected catalog: list the
 //! catalog, bind the listener, serve until the token is cancelled, then drain.
 //!
-//! Tests call [`start`] and [`Started::serve`] with a floe-testkit catalog; `floe serve` calls
-//! [`run`], which is the two together.
+//! Tests call [`start`] and [`Started::serve`] with an iceblink-testkit catalog;
+//! `iceblink serve` calls [`run`], which is the two together.
 
 use std::io;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Instant;
 
-use floe_catalog::{CatalogError, LakeCatalog};
-use floe_pg::{PgError, ServerSettings, ShutdownSummary, serve_on};
-use floe_scan::{CATALOG_NAME, LakeCatalogProvider, RefreshSummary, new_session};
+use iceblink_catalog::{CatalogError, LakeCatalog};
+use iceblink_pg::{PgError, ServerSettings, ShutdownSummary, serve_on};
+use iceblink_scan::{CATALOG_NAME, LakeCatalogProvider, RefreshSummary, new_session};
 use tokio::net::TcpListener;
 use tokio_util::sync::CancellationToken;
 
@@ -21,14 +21,14 @@ use crate::config::ValidConfig;
 #[cfg(test)]
 mod tests;
 
-/// What `run` needs besides the config: the connected catalog. Tests pass a floe-testkit one.
+/// What `run` needs besides the config: the connected catalog. Tests pass an iceblink-testkit one.
 pub struct Deps {
-    /// The Iceberg catalog Floe serves.
+    /// The Iceberg catalog Iceblink serves.
     pub catalog: LakeCatalog,
 }
 
 impl Deps {
-    /// Connects to the catalog `config` names, as `floe serve` does.
+    /// Connects to the catalog `config` names, as `iceblink serve` does.
     ///
     /// # Errors
     ///
@@ -40,7 +40,7 @@ impl Deps {
     }
 }
 
-/// Why Floe couldn't start or keep serving.
+/// Why Iceblink couldn't start or keep serving.
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum AppError {
@@ -77,7 +77,7 @@ fn bind_fix(listen: SocketAddr, kind: io::ErrorKind) -> String {
     match kind {
         io::ErrorKind::AddrInUse => format!(
             "port {port} is already in use: stop the other server, or set pg_listen to a free \
-             port in floe.toml"
+             port in iceblink.toml"
         ),
         io::ErrorKind::PermissionDenied => format!(
             "port {port} needs extra privileges: set pg_listen to a port of 1024 or above, such \
@@ -87,11 +87,11 @@ fn bind_fix(listen: SocketAddr, kind: io::ErrorKind) -> String {
             "{} is not an address of this machine: set pg_listen to 127.0.0.1:{port}",
             listen.ip()
         ),
-        _ => "check pg_listen in floe.toml".to_owned(),
+        _ => "check pg_listen in iceblink.toml".to_owned(),
     }
 }
 
-/// Starts Floe and serves until `shutdown` is cancelled.
+/// Starts Iceblink and serves until `shutdown` is cancelled.
 ///
 /// # Errors
 ///
@@ -135,7 +135,7 @@ pub async fn start(config: ValidConfig, deps: Deps) -> Result<Started, AppError>
     })
 }
 
-/// A started Floe: the catalog listed and the listener bound.
+/// A started Iceblink: the catalog listed and the listener bound.
 pub struct Started {
     listener: TcpListener,
     provider: Arc<LakeCatalogProvider>,
@@ -163,7 +163,7 @@ impl Started {
         tracing::info!(
             queries_drained = summary.drained,
             queries_cancelled = summary.cancelled,
-            "Floe stopped: {summary}"
+            "Iceblink stopped: {summary}"
         );
         Ok(summary)
     }
@@ -187,5 +187,5 @@ pub(crate) fn psql_command(address: SocketAddr) -> String {
         5432 => String::new(),
         port => format!(" -p {port}"),
     };
-    format!("psql -h {}{port} -U floe {CATALOG_NAME}", address.ip())
+    format!("psql -h {}{port} -U iceblink {CATALOG_NAME}", address.ip())
 }

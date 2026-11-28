@@ -1,23 +1,23 @@
-# 0009. S3 reads with Floe's own read-only reader
+# 0009. S3 reads with Iceblink's own read-only reader
 
 - Status: Accepted
 - Date: 2026-11-20
 
 ## Context
 
-Prompt 9 asked `floe serve` to answer the floe-lab region query (5 rows from `sales.orders` on
+Prompt 9 asked `iceblink serve` to answer the iceblink-lab region query (5 rows from `sales.orders` on
 MinIO). That differed from where the code was:
-- floe-scan read only local files, because S3 was deferred in Prompt 6;
+- iceblink-scan read only local files, because S3 was deferred in Prompt 6;
 - iceberg 0.11's core crate ships only local and in-memory storage.
 
 So the query needed an S3 reader first.
 
-What Floe needs from S3 is small:
+What Iceblink needs from S3 is small:
 - `HEAD` for sizes;
 - ranged `GET` for Parquet footers and column chunks;
 - whole `GET` for manifests;
 - AWS S3 and S3-compatible stores (MinIO), path-style or virtual-hosted;
-- credentials from the standard AWS chain, which floe.toml already promises.
+- credentials from the standard AWS chain, which iceblink.toml already promises.
 
 It must never write.
 
@@ -39,14 +39,14 @@ It must never write.
    None of it can be turned off.
 3. **Ignore the advisories** with an expiry, on the grounds that the XML only comes from the
    configured S3 endpoint.
-4. **Floe's own read-only reader** on reqwest 0.12 and aws-sigv4, both already dependencies.
+4. **Iceblink's own read-only reader** on reqwest 0.12 and aws-sigv4, both already dependencies.
    - **Pros:** no new crates, no XML parsing, ring and webpki roots kept.
    - **Cons:** about 350 lines to own.
 
 ## Decision
 
 **Option 4, maintainer's choice after options 1 and 2 hit the issues above.**
-`floe-scan/src/s3.rs` implements iceberg's `Storage` directly.
+`iceblink-scan/src/s3.rs` implements iceberg's `Storage` directly.
 
 - **Read-only by construction.**
   - The module builds only GET and HEAD requests.
@@ -69,14 +69,14 @@ It must never write.
   - the `Range` header left unsigned, as SigV4 allows.
 - **HTTP.**
   - reqwest 0.12 with rustls on ring and only the compiled-in webpki roots, named explicitly.
-    floe-catalog's client now names them explicitly too.
+    iceblink-catalog's client now names them explicitly too.
   - No redirects; connect 5 s, request 60 s.
 - **Retries:** only these reads, for timeouts, failed connections, 429 and 5xx. Three attempts,
   waiting 200 ms and then 400 ms.
 - **Credentials.**
-  - They come from `floe_catalog::AwsCredentials`, the cache the catalog's SigV4 signer uses,
+  - They come from `iceblink_catalog::AwsCredentials`, the cache the catalog's SigV4 signer uses,
     moved out of the signer unchanged.
-  - The chain loads on the first read, so `floe serve` starts without touching AWS.
+  - The chain loads on the first read, so `iceblink serve` starts without touching AWS.
   - It uses `[catalog.sigv4] profile` when set (added 2026-11-23: before, S3 reads ignored it
     and could run as a different identity from the catalog), and the default chain otherwise.
 - **Locations.** `Storages` routes `s3://` and `s3a://` to one shared `S3Storage` per catalog,
@@ -88,7 +88,7 @@ It must never write.
 - **The tree has no XML parser,** and no new crates were added for S3.
 - **A missing or wrong AWS identity shows on the first query, not at startup.** The client gets
   XX000 with a request ID, and the log line under that ID says to set AWS_PROFILE or the
-  AWS_ACCESS_KEY_ID pair. A startup check could come with `floe doctor` (v0.1).
+  AWS_ACCESS_KEY_ID pair. A startup check could come with `iceblink doctor` (v0.1).
 - **Not supported:** multipart parallel range fetching, S3 Express, and Lakekeeper-vended
   credentials (`X-Iceberg-Access-Delegation`). Revisit if a catalog only hands out per-table
   credentials.
@@ -100,4 +100,4 @@ It must never write.
   - zero writes;
   - every URL style with key encoding.
 
-  Real MinIO and AWS S3 are covered only by the floe-lab test (`FLOE_LAB=1`).
+  Real MinIO and AWS S3 are covered only by the iceblink-lab test (`ICEBLINK_LAB=1`).

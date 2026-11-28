@@ -21,7 +21,7 @@ scripts/tpch-expected.sh
   answers derive from the TPC-H specification. These are correctness tests, not TPC-H
   benchmark results, and may not be presented as such.
 
-The script moves to floe-lab once it exists, as a DuckDB export (`CALL dbgen(sf = 0.01)`, then
+The script moves to iceblink-lab once it exists, as a DuckDB export (`CALL dbgen(sf = 0.01)`, then
 the 22 queries). This README will then record its command and DuckDB version.
 
 ## Known failures

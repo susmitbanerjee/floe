@@ -9,9 +9,9 @@ use datafusion::arrow::record_batch::RecordBatch;
 use datafusion::arrow::util::display::array_value_to_string;
 use datafusion::catalog::{CatalogProvider, MemorySchemaProvider};
 use datafusion::prelude::SessionContext;
-use floe_catalog::LakeCatalog;
-use floe_scan::{LakeCatalogProvider, StorageSettings, new_session};
-use floe_testkit::{Fixture, TableFixture};
+use iceblink_catalog::LakeCatalog;
+use iceblink_scan::{LakeCatalogProvider, StorageSettings, new_session};
+use iceblink_testkit::{Fixture, TableFixture};
 use url::Url;
 
 type TestResult = Result<(), Box<dyn Error>>;
@@ -191,7 +191,7 @@ async fn only_pg_catalog_can_be_added_to_the_lake() -> TestResult {
 async fn a_session_receipt_records_each_scan() -> TestResult {
     let fixture = orders().await?;
     let (_, session) = lake(&fixture).await?;
-    let receipt = Arc::new(floe_scan::QueryReceipt::default());
+    let receipt = Arc::new(iceblink_scan::QueryReceipt::default());
     session
         .state_ref()
         .write()

@@ -2,7 +2,7 @@
 
 use std::net::SocketAddr;
 
-use floe_scan::ScanError;
+use iceblink_scan::ScanError;
 
 /// The settings `SET` accepts, for the message that refuses the rest.
 pub(crate) const SETTABLE: &str = "search_path, statement_timeout, application_name, \
@@ -31,24 +31,24 @@ pub enum PgError {
         message: String,
     },
     /// The statement would change something, or isn't on the allow-list.
-    #[error("Floe is read-only: {kind} is not allowed.")]
+    #[error("Iceblink is read-only: {kind} is not allowed.")]
     ReadOnly {
         /// The statement kind, such as `CREATE TABLE`.
         kind: String,
     },
-    /// `SET` of a setting Floe doesn't support.
-    #[error("Floe doesn't support setting {name}; it can set {SETTABLE}")]
+    /// `SET` of a setting Iceblink doesn't support.
+    #[error("Iceblink doesn't support setting {name}; it can set {SETTABLE}")]
     UnsupportedSetting {
         /// The setting the client tried to change.
         name: String,
     },
     /// A client encoding other than UTF8.
-    #[error("client_encoding {encoding} isn't supported; Floe speaks only UTF8")]
+    #[error("client_encoding {encoding} isn't supported; Iceblink speaks only UTF8")]
     UnsupportedEncoding {
         /// The encoding the client asked for.
         encoding: String,
     },
-    /// `SET statement_timeout` with a value Floe can't read.
+    /// `SET statement_timeout` with a value Iceblink can't read.
     #[error(
         "invalid value for statement_timeout: {value}; use milliseconds, or a number with a \
          unit such as '5s' or '1min'"
@@ -79,9 +79,9 @@ pub enum PgError {
         limit: usize,
     },
     /// A new statement arrived while the server drains for shutdown.
-    #[error("terminating connection: Floe is shutting down")]
+    #[error("terminating connection: Iceblink is shutting down")]
     ShuttingDown,
     /// A new connection arrived while the server drains for shutdown.
-    #[error("Floe is shutting down and accepts no new connections; try again when it is back")]
+    #[error("Iceblink is shutting down and accepts no new connections; try again when it is back")]
     NotAcceptingConnections,
 }

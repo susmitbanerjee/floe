@@ -4,8 +4,8 @@
 use std::error::Error;
 
 use datafusion::execution::object_store::ObjectStoreUrl;
-use floe_catalog::LakeCatalog;
-use floe_testkit::TableFixture;
+use iceblink_catalog::LakeCatalog;
+use iceblink_testkit::TableFixture;
 
 use super::*;
 use crate::StorageSettings;

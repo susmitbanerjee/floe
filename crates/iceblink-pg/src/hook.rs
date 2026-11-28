@@ -1,10 +1,10 @@
-//! `FloeHook`: the allow-list and Floe's own session settings, plugged into datafusion-postgres
+//! `PgHook`: the allow-list and Iceblink's own session settings, plugged into datafusion-postgres
 //! as a query hook so they see every statement of both protocols.
 //!
 //! In the simple protocol the hook also runs allowed queries itself: it plans them, checks the
 //! plan with DataFusion's read-only options (the second layer), and hands back tracked rows. In
 //! the extended protocol the library plans and runs them, because only it knows the portal's
-//! result formats, and `FloeHandler` checks and tracks them.
+//! result formats, and `PgHandler` checks and tracks them.
 
 use std::error::Error;
 use std::sync::Arc;
@@ -47,12 +47,12 @@ pub(crate) fn read_only() -> SQLOptions {
         .with_allow_statements(false)
 }
 
-/// The allow-list and Floe's session settings for one connection.
-pub(crate) struct FloeHook {
+/// The allow-list and Iceblink's session settings for one connection.
+pub(crate) struct PgHook {
     statements: Arc<Statements>,
 }
 
-impl FloeHook {
+impl PgHook {
     pub(crate) fn new(statements: Arc<Statements>) -> Self {
         Self { statements }
     }
@@ -73,7 +73,7 @@ impl FloeHook {
         }
     }
 
-    /// Applies one of Floe's own settings, or answers SHOW statement_timeout.
+    /// Applies one of Iceblink's own settings, or answers SHOW statement_timeout.
     async fn apply(
         &self,
         allowed: Allowed<'_>,
@@ -109,7 +109,7 @@ impl FloeHook {
 }
 
 #[async_trait]
-impl QueryHook for FloeHook {
+impl QueryHook for PgHook {
     async fn handle_simple_query(
         &self,
         statement: &Statement,
@@ -208,7 +208,7 @@ fn show(name: &str, value: &str) -> PgWireResult<Response> {
     )))
 }
 
-/// The plan the extended protocol stores for a statement Floe answers itself: nothing to run,
+/// The plan the extended protocol stores for a statement Iceblink answers itself: nothing to run,
 /// only the result's columns.
 fn plan_for(fields: Vec<Field>) -> PgWireResult<LogicalPlan> {
     let schema = DFSchema::try_from(Schema::new(fields))

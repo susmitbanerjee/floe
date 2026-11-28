@@ -1,9 +1,9 @@
-//! The `SessionContext` every Floe query runs in: the `lake` catalog, and nothing that can read
+//! The `SessionContext` every Iceblink query runs in: the `lake` catalog, and nothing that can read
 //! or write files on its own (docs/adr/0007-session-lockdown.md).
 //!
 //! # Audit of DataFusion 54.2.0's defaults
 //!
-//! What `SessionStateBuilder::with_default_features` registers, and what Floe keeps:
+//! What `SessionStateBuilder::with_default_features` registers, and what Iceblink keeps:
 //!
 //! - **Table functions:** `generate_series` and `range` only. Neither reads files or URLs; both
 //!   are kept. There is no `read_csv`, `read_parquet` or similar in DataFusion core.
@@ -17,7 +17,8 @@
 //!   **removed**.
 //! - **Object store registry:** the default pre-registers a `LocalFileSystem` rooted at `/` for
 //!   `file://`. **Replaced** with [`ClosedObjectStoreRegistry`], which serves no store at all.
-//!   Floe's scans read through iceberg's FileIO and Floe's counting storage, never this registry.
+//!   Iceblink's scans read through iceberg's FileIO and Iceblink's counting storage, never this
+//!   registry.
 //! - **URL tables** (`SELECT * FROM '/path'`): off by default, and left off (`enable_url_table`
 //!   is never called).
 //! - **The in-memory `datafusion.public` schema**, where `CREATE TABLE AS` and `CREATE VIEW`
@@ -122,7 +123,7 @@ impl ClosedObjectStoreRegistry {
     fn refuse(&self, url: &Url) -> DataFusionError {
         self.refused.fetch_add(1, Ordering::SeqCst);
         DataFusionError::Plan(format!(
-            "Floe reads storage only through its Iceberg tables, so {}:// locations can't be \
+            "Iceblink reads storage only through its Iceberg tables, so {}:// locations can't be \
              used from SQL. Query a table in the lake catalog instead.",
             url.scheme()
         ))

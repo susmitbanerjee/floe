@@ -1,6 +1,6 @@
-# AWS permissions for Floe
+# AWS permissions for Iceblink
 
-Floe only reads. Give the AWS identity it signs with (the profile, SSO role, or instance or pod
+Iceblink only reads. Give the AWS identity it signs with (the profile, SSO role, or instance or pod
 role) this policy and nothing more. Replace `REGION`, `ACCOUNT_ID`, `BUCKET` and `PREFIX` (the
 warehouse location, without a trailing slash).
 
@@ -8,7 +8,7 @@ warehouse location, without a trailing slash).
 
 What each catalog call needs, per AWS's Glue Iceberg REST API reference:
 
-| Floe call | REST route | IAM action |
+| Iceblink call | REST route | IAM action |
 |---|---|---|
 | `connect` | `GET /iceberg/v1/config?warehouse=ACCOUNT_ID` | `glue:GetCatalog` |
 | `list_namespaces` | `GET /iceberg/v1/catalogs/{catalog}/namespaces` | `glue:GetDatabase`, `glue:GetDatabases` |
@@ -23,7 +23,7 @@ Reading the table's files, done by the object store client, needs `s3:GetObject`
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "FloeReadGlueCatalog",
+      "Sid": "IceblinkReadGlueCatalog",
       "Effect": "Allow",
       "Action": [
         "glue:GetCatalog",
@@ -39,14 +39,14 @@ Reading the table's files, done by the object store client, needs `s3:GetObject`
       ]
     },
     {
-      "Sid": "FloeListWarehousePrefix",
+      "Sid": "IceblinkListWarehousePrefix",
       "Effect": "Allow",
       "Action": "s3:ListBucket",
       "Resource": "arn:aws:s3:::BUCKET",
       "Condition": { "StringLike": { "s3:prefix": ["PREFIX/*"] } }
     },
     {
-      "Sid": "FloeReadWarehouseObjects",
+      "Sid": "IceblinkReadWarehouseObjects",
       "Effect": "Allow",
       "Action": "s3:GetObject",
       "Resource": "arn:aws:s3:::BUCKET/PREFIX/*"
@@ -55,7 +55,7 @@ Reading the table's files, done by the object store client, needs `s3:GetObject`
 }
 ```
 
-To narrow further, replace `database/*` and `table/*/*` with the databases and tables Floe should
+To narrow further, replace `database/*` and `table/*/*` with the databases and tables Iceblink should
 see, such as `database/sales` and `table/sales/*`.
 
 ## S3 Tables through Glue

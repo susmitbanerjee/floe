@@ -15,17 +15,17 @@ use datafusion_postgres::pgwire::api::ConnectionManager;
 use datafusion_postgres::pgwire::api::cancel::DefaultCancelHandler;
 use datafusion_postgres::pgwire::tokio::process_socket;
 use datafusion_postgres::{DfSessionService, QueryHook};
-use floe_scan::{CATALOG_NAME, QueryReceipt, ScanError};
+use iceblink_scan::{CATALOG_NAME, QueryReceipt, ScanError};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::Semaphore;
 use tokio::task::JoinSet;
 use tokio_util::sync::CancellationToken;
 
-use crate::connection::{FloeHandlers, FloeStartup, Refusal, RefusalHandlers};
+use crate::connection::{PgHandlers, PgStartup, Refusal, RefusalHandlers};
 use crate::drain::Drain;
-use crate::errors::FloeErrorHandler;
-use crate::handler::FloeHandler;
-use crate::hook::FloeHook;
+use crate::errors::PgErrorHandler;
+use crate::handler::PgHandler;
+use crate::hook::PgHook;
 use crate::statement::{QueryIds, Statements};
 use crate::{PgError, ServerSettings};
 
@@ -33,7 +33,7 @@ use crate::{PgError, ServerSettings};
 /// out of file descriptors.
 const ACCEPT_BACKOFF: Duration = Duration::from_millis(100);
 
-/// Serves Floe over the Postgres protocol on `settings.listen` until `shutdown` is cancelled,
+/// Serves Iceblink over the Postgres protocol on `settings.listen` until `shutdown` is cancelled,
 /// then waits up to `settings.shutdown_grace` for in-flight statements, cancels the rest, and
 /// says how many of each.
 ///
@@ -170,7 +170,7 @@ struct Server<F> {
     permits: Arc<Semaphore>,
     connections: Arc<ConnectionManager>,
     cancel: Arc<DefaultCancelHandler>,
-    errors: Arc<FloeErrorHandler>,
+    errors: Arc<PgErrorHandler>,
 }
 
 impl<F> Server<F>
@@ -183,7 +183,7 @@ where
         Self {
             session_factory,
             settings,
-            errors: Arc::new(FloeErrorHandler::new(Arc::clone(&ids))),
+            errors: Arc::new(PgErrorHandler::new(Arc::clone(&ids))),
             ids,
             drain: Arc::new(Drain::new(shutdown)),
             permits: Arc::new(Semaphore::new(settings.max_connections)),
@@ -226,7 +226,7 @@ where
 
     /// [`handlers`](Self::handlers) on the blocking pool: setting up pg_catalog parses its
     /// embedded tables, about 250 ms of CPU per connection in a debug build (ADR 0008).
-    async fn setup(self: &Arc<Self>) -> Result<FloeHandlers, PgError> {
+    async fn setup(self: &Arc<Self>) -> Result<PgHandlers, PgError> {
         let server = Arc::clone(self);
         tokio::task::spawn_blocking(move || server.handlers())
             .await
@@ -235,8 +235,8 @@ where
             })?
     }
 
-    /// A new session from the factory, with pg_catalog and a receipt, behind Floe's handlers.
-    fn handlers(&self) -> Result<FloeHandlers, PgError> {
+    /// A new session from the factory, with pg_catalog and a receipt, behind Iceblink's handlers.
+    fn handlers(&self) -> Result<PgHandlers, PgError> {
         let session = (self.session_factory)()?;
         setup_pg_catalog(&session, CATALOG_NAME, EmptyContextProvider).map_err(|error| {
             PgError::SessionSetup {
@@ -257,17 +257,13 @@ where
         ));
         let hooks: Vec<Arc<dyn QueryHook>> = vec![
             Arc::new(TransactionStatementHook),
-            Arc::new(FloeHook::new(Arc::clone(&statements))),
+            Arc::new(PgHook::new(Arc::clone(&statements))),
             Arc::new(SetShowHook),
         ];
         let service = DfSessionService::new_with_hooks(Arc::new(session), hooks);
-        Ok(FloeHandlers {
-            handler: Arc::new(FloeHandler::new(
-                service,
-                statements,
-                Arc::clone(&self.drain),
-            )),
-            startup: Arc::new(FloeStartup::new(Arc::clone(&self.connections), search_path)),
+        Ok(PgHandlers {
+            handler: Arc::new(PgHandler::new(service, statements, Arc::clone(&self.drain))),
+            startup: Arc::new(PgStartup::new(Arc::clone(&self.connections), search_path)),
             errors: Arc::clone(&self.errors),
             cancel: Arc::clone(&self.cancel),
         })

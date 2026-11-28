@@ -32,14 +32,14 @@ pub(crate) async fn run(command: Command) -> Result<(), Failure> {
     }
 }
 
-/// `floe config check`: read and check the file, touching nothing else.
+/// `iceblink config check`: read and check the file, touching nothing else.
 fn check(path: &Path) -> Result<(), Failure> {
     load(path)?;
     output::next(&serve_command(path));
     Ok(())
 }
 
-/// `floe serve`: config, catalog, listener, then serve until a signal, and drain.
+/// `iceblink serve`: config, catalog, listener, then serve until a signal, and drain.
 async fn serve(path: &Path) -> Result<(), Failure> {
     let config = load(path)?;
     tracing::info!(
@@ -74,11 +74,11 @@ fn load(path: &Path) -> Result<ValidConfig, Failure> {
     Ok(config)
 }
 
-/// `floe serve`, with `--config` when the file isn't the default.
+/// `iceblink serve`, with `--config` when the file isn't the default.
 fn serve_command(path: &Path) -> String {
     if path == Path::new(DEFAULT_CONFIG_PATH) {
-        "floe serve".to_owned()
+        "iceblink serve".to_owned()
     } else {
-        format!("floe serve --config {}", path.display())
+        format!("iceblink serve --config {}", path.display())
     }
 }

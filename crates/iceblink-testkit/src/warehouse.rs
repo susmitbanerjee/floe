@@ -135,7 +135,7 @@ pub(crate) async fn write_data_file(
 ) -> Result<Vec<DataFile>> {
     let metadata = table.metadata();
     let properties = WriterProperties::builder()
-        .set_created_by("floe-testkit".to_owned())
+        .set_created_by("iceblink-testkit".to_owned())
         .build();
     let rolling = RollingFileWriterBuilder::new_with_default_file_size(
         ParquetWriterBuilder::new(properties, metadata.current_schema().clone()),

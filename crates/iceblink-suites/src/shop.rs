@@ -30,7 +30,7 @@ use datafusion::arrow::array::{
 };
 use datafusion::arrow::datatypes::{DataType, Field, Schema, TimeUnit};
 use datafusion::arrow::error::ArrowError;
-use floe_testkit::Warehouse;
+use iceblink_testkit::Warehouse;
 
 use crate::SuiteError;
 
@@ -130,7 +130,7 @@ fn orders(rows: &[OrderRow]) -> Result<RecordBatch, ArrowError> {
     RecordBatch::try_new(Arc::new(schema), columns)
 }
 
-/// Boundary values for each type Floe promises to round-trip.
+/// Boundary values for each type Iceblink promises to round-trip.
 ///
 /// ```text
 /// id  big                   label     price            day         at                                 flag

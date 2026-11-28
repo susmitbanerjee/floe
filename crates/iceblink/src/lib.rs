@@ -1,7 +1,7 @@
-//! Floe as a library: start it in-process, as the end-to-end suites do, or run the command
-//! line ([`run_cli`]), which the `floe` binary does.
+//! Iceblink as a library: start it in-process, as the end-to-end suites do, or run the command
+//! line ([`run_cli`]), which the `iceblink` binary does.
 //!
-//! Floe serves Apache Iceberg tables over the Postgres wire protocol, read-only.
+//! Iceblink serves Apache Iceberg tables over the Postgres wire protocol, read-only.
 
 mod app;
 mod cli;
@@ -15,9 +15,9 @@ use clap::Parser;
 
 pub use app::{AppError, Deps, Started, run, start};
 pub use config::{ConfigError, ValidConfig};
-pub use floe_pg::ShutdownSummary;
+pub use iceblink_pg::ShutdownSummary;
 
-/// Parses and checks floe.toml text, reading `env:NAME` secrets through `env`.
+/// Parses and checks iceblink.toml text, reading `env:NAME` secrets through `env`.
 ///
 /// # Errors
 ///
@@ -38,8 +38,8 @@ pub fn load_config(path: &Path) -> Result<ValidConfig, ConfigError> {
     config::Config::load(path)
 }
 
-/// The `floe` command: parses arguments, starts logging and the async runtime, runs the
-/// command, and turns the outcome into an exit code (see `floe --help`).
+/// The `iceblink` command: parses arguments, starts logging and the async runtime, runs the
+/// command, and turns the outcome into an exit code (see `iceblink --help`).
 pub fn run_cli() -> ExitCode {
     // clap prints --help and --version itself, and exits 2 on bad usage.
     let args = cli::Args::parse();

@@ -10,7 +10,7 @@ pub struct Expected {
     pub rows: Vec<Vec<String>>,
 }
 
-/// Splits `text` on `separator` (`|` for DuckDB's answers, `,` for floe-lab's checks). After
+/// Splits `text` on `separator` (`|` for DuckDB's answers, `,` for iceblink-lab's checks). After
 /// the header every line is a row, even an empty one: that is how DuckDB writes a single NULL.
 pub fn parse(text: &str, separator: char) -> Expected {
     let mut lines = text.lines();

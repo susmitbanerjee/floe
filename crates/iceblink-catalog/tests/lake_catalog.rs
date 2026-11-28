@@ -8,11 +8,11 @@ use std::net::TcpListener;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use floe_catalog::{
-    CatalogError, CatalogSettings, CatalogTimeouts, LakeCatalog, NamespaceName, TableName,
-};
 use iceberg::CatalogBuilder;
 use iceberg_catalog_rest::{REST_CATALOG_PROP_URI, RestCatalogBuilder};
+use iceblink_catalog::{
+    CatalogError, CatalogSettings, CatalogTimeouts, LakeCatalog, NamespaceName, TableName,
+};
 use secrecy::SecretString;
 use url::Url;
 use wiremock::matchers::{header, method, path, query_param};
@@ -21,7 +21,7 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 type TestResult = Result<(), Box<dyn Error>>;
 
 const SECRET: &str = "s3cr3t-catalog-token";
-const USER_AGENT: &str = concat!("floe/", env!("CARGO_PKG_VERSION"));
+const USER_AGENT: &str = concat!("iceblink/", env!("CARGO_PKG_VERSION"));
 const NAMESPACES: &str = r#"{"namespaces": [["sales"], ["marketing"]]}"#;
 const TABLES: &str = r#"{"identifiers": [{"namespace": ["sales"], "name": "orders"}]}"#;
 const METADATA: &str = include_str!("fixtures/orders.metadata.json");
@@ -69,7 +69,7 @@ fn orders() -> Result<TableName, CatalogError> {
 #[tokio::test]
 async fn connects_lists_and_loads() -> TestResult {
     let server = MockServer::start().await;
-    // Every request must carry Floe's user agent, not iceberg-rs's.
+    // Every request must carry Iceblink's user agent, not iceberg-rs's.
     Mock::given(method("GET"))
         .and(path("/v1/config"))
         .and(header("user-agent", USER_AGENT))

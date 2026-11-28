@@ -1,4 +1,4 @@
-//! Serde types that mirror floe.toml key for key. Every table refuses unknown keys, so a typo
+//! Serde types that mirror iceblink.toml key for key. Every table refuses unknown keys, so a typo
 //! fails with the key's name and the keys that table accepts.
 
 use std::net::SocketAddr;
@@ -7,7 +7,7 @@ use serde::Deserialize;
 
 use super::secret::SecretReference;
 
-/// floe.toml as written, before any rule is checked.
+/// iceblink.toml as written, before any rule is checked.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Config {
@@ -16,7 +16,7 @@ pub(crate) struct Config {
     pub(super) storage: StorageTable,
 }
 
-/// The `[server]` table: Floe's Postgres listener.
+/// The `[server]` table: Iceblink's Postgres listener.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct ServerTable {
@@ -47,7 +47,7 @@ pub(super) struct SigV4Table {
     pub(super) profile: Option<String>,
 }
 
-/// The `[storage]` table: where table data lives and what Floe may read.
+/// The `[storage]` table: where table data lives and what Iceblink may read.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct StorageTable {

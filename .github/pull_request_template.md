@@ -46,7 +46,7 @@ The gate already enforces formatting, the lints (no `unwrap`, `expect`, `panic!`
       plain function replace anything new?
 - [ ] Every new trait, generic or layer has two real implementations today, or is a seam the
       design names.
-- [ ] Crates depend one way (`floe -> floe-pg -> floe-scan -> floe-catalog`), and new items are
+- [ ] Crates depend one way (`iceblink -> iceblink-pg -> iceblink-scan -> iceblink-catalog`), and new items are
       `pub(crate)` unless they are the crate's API.
 - [ ] Names use the design's words: catalog, namespace, table, snapshot, receipt, principal,
       warehouse.

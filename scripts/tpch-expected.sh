@@ -5,7 +5,7 @@
 #
 # Usage: scripts/tpch-expected.sh            (from the repository root)
 #
-# Moves to floe-lab once it exists. tests/expected/README.md records the tag and commit.
+# Moves to iceblink-lab once it exists. tests/expected/README.md records the tag and commit.
 set -euo pipefail
 
 tag="v2.0.0"

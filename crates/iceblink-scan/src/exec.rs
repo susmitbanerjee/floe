@@ -1,4 +1,4 @@
-//! `FloeScanExec`: streams one pinned snapshot's planned files and reports what the query read.
+//! `LakeScanExec`: streams one pinned snapshot's planned files and reports what the query read.
 
 use std::fmt;
 use std::pin::Pin;
@@ -49,7 +49,7 @@ pub(crate) struct ScanPlan {
 
 /// Scans one pinned snapshot of an Iceberg table and reports, in EXPLAIN ANALYZE, the files it
 /// planned against the snapshot's total and every byte and request it made to storage.
-pub struct FloeScanExec {
+pub struct LakeScanExec {
     table: String,
     snapshot_id: i64,
     files_total: Option<u64>,
@@ -63,7 +63,7 @@ pub struct FloeScanExec {
     get_requests: Gauge,
 }
 
-impl FloeScanExec {
+impl LakeScanExec {
     pub(crate) fn new(plan: ScanPlan) -> Self {
         let metrics = ExecutionPlanMetricsSet::new();
         if let Some(total) = plan.files_total {
@@ -139,10 +139,10 @@ impl FloeScanExec {
     }
 }
 
-impl fmt::Debug for FloeScanExec {
+impl fmt::Debug for LakeScanExec {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
-            .debug_struct("FloeScanExec")
+            .debug_struct("LakeScanExec")
             .field("table", &self.table)
             .field("snapshot_id", &self.snapshot_id)
             .field("files_scanned", &self.tasks.len())
@@ -151,14 +151,14 @@ impl fmt::Debug for FloeScanExec {
     }
 }
 
-impl DisplayAs for FloeScanExec {
+impl DisplayAs for LakeScanExec {
     fn fmt_as(&self, _format: DisplayFormatType, formatter: &mut fmt::Formatter) -> fmt::Result {
         let total = self
             .files_total
             .map_or_else(|| "?".to_owned(), |total| total.to_string());
         write!(
             formatter,
-            "FloeScanExec: {} snapshot={} files={}/{total}",
+            "LakeScanExec: {} snapshot={} files={}/{total}",
             self.table,
             self.snapshot_id,
             self.tasks.len()
@@ -166,9 +166,9 @@ impl DisplayAs for FloeScanExec {
     }
 }
 
-impl ExecutionPlan for FloeScanExec {
+impl ExecutionPlan for LakeScanExec {
     fn name(&self) -> &str {
-        "FloeScanExec"
+        "LakeScanExec"
     }
 
     fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>> {
@@ -197,7 +197,7 @@ impl ExecutionPlan for FloeScanExec {
     ) -> DFResult<SendableRecordBatchStream> {
         if partition != 0 {
             return Err(DataFusionError::Internal(format!(
-                "FloeScanExec has one partition, not {partition}"
+                "LakeScanExec has one partition, not {partition}"
             )));
         }
         let tasks: FileScanTaskStream = Box::pin(stream::iter(

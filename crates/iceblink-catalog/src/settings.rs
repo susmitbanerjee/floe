@@ -3,7 +3,7 @@ use std::time::Duration;
 use secrecy::SecretString;
 use url::Url;
 
-/// How Floe reaches an Iceberg REST catalog, already checked by the binary's config loader.
+/// How Iceblink reaches an Iceberg REST catalog, already checked by the binary's config loader.
 #[derive(Debug, Clone)]
 pub struct CatalogSettings {
     /// The catalog's base URI. https whenever a credential or SigV4 signing is set.
@@ -14,7 +14,7 @@ pub struct CatalogSettings {
     pub credential: Option<SecretString>,
     /// AWS SigV4 request signing, for Glue and S3 Tables endpoints.
     pub sigv4: Option<SigV4Settings>,
-    /// Limits for every call Floe makes to the catalog.
+    /// Limits for every call Iceblink makes to the catalog.
     pub timeouts: CatalogTimeouts,
 }
 
@@ -30,7 +30,7 @@ pub struct SigV4Settings {
     pub profile: Option<String>,
 }
 
-/// The AWS services whose Iceberg REST endpoints Floe can sign for.
+/// The AWS services whose Iceberg REST endpoints Iceblink can sign for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SigV4Service {
     /// AWS Glue Data Catalog (signing name `glue`).

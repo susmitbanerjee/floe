@@ -13,10 +13,10 @@ use async_trait::async_trait;
 use datafusion::catalog::{CatalogProvider, SchemaProvider, TableProvider};
 use datafusion::datasource::TableType;
 use datafusion::error::{DataFusionError, Result as DFResult};
-use floe_catalog::{CatalogError, LakeCatalog, NamespaceName, TableName};
+use iceblink_catalog::{CatalogError, LakeCatalog, NamespaceName, TableName};
 
 use crate::storage::Storages;
-use crate::{FloeTableProvider, ScanError, StorageSettings};
+use crate::{LakeTableProvider, ScanError, StorageSettings};
 
 /// Namespace name to its table names, both sorted.
 type Listing = BTreeMap<String, BTreeSet<String>>;
@@ -70,7 +70,7 @@ pub struct RefreshSummary {
     pub tables: usize,
 }
 
-/// The DataFusion catalog Floe serves as database `lake`.
+/// The DataFusion catalog Iceblink serves as database `lake`.
 pub struct LakeCatalogProvider {
     shared: Arc<Shared>,
 }
@@ -159,7 +159,7 @@ impl CatalogProvider for LakeCatalogProvider {
     }
 
     /// Accepts only `pg_catalog`, the Postgres system schema the server sets up for clients
-    /// such as psql. Every other schema is an Iceberg namespace, and Floe never creates those.
+    /// such as psql. Every other schema is an Iceberg namespace, and Iceblink never creates those.
     fn register_schema(
         &self,
         name: &str,
@@ -167,7 +167,7 @@ impl CatalogProvider for LakeCatalogProvider {
     ) -> DFResult<Option<Arc<dyn SchemaProvider>>> {
         if name != PG_CATALOG {
             return Err(DataFusionError::Plan(format!(
-                "Floe is read-only: schema {name} can't be created; schemas are the Iceberg \
+                "Iceblink is read-only: schema {name} can't be created; schemas are the Iceberg \
                  catalog's namespaces"
             )));
         }
@@ -202,7 +202,7 @@ impl NamespaceProvider {
             .storages
             .for_location(loaded.metadata().location())
             .map_err(scan_error)?;
-        let provider = FloeTableProvider::with_inner_storage(loaded, &self.shared.storage, inner)
+        let provider = LakeTableProvider::with_inner_storage(loaded, &self.shared.storage, inner)
             .map_err(scan_error)?;
         Ok(Arc::new(provider))
     }

@@ -2,7 +2,7 @@
 //! their text.
 
 use datafusion::prelude::SessionContext;
-use floe_scan::ScanError;
+use iceblink_scan::ScanError;
 
 use super::*;
 
@@ -48,7 +48,7 @@ fn maps_each_error_to_its_sqlstate() {
                 kind: "CREATE TABLE".to_owned(),
             }),
             "25006",
-            "Floe is read-only: CREATE TABLE is not allowed.",
+            "Iceblink is read-only: CREATE TABLE is not allowed.",
         ),
         (
             Box::new(PgError::UnsupportedSetting {
@@ -105,7 +105,7 @@ async fn an_unknown_column_is_42703() {
 
 #[test]
 fn internal_errors_show_only_a_request_id() {
-    let path = "/var/floe/warehouse/sales/orders/data/part-0.parquet";
+    let path = "/var/iceblink/warehouse/sales/orders/data/part-0.parquet";
     let errors: Vec<Box<dyn Error>> = vec![
         Box::new(DataFusionError::Execution(format!("Failed to open {path}"))),
         Box::new(DataFusionError::External(Box::new(ScanError::Io {
